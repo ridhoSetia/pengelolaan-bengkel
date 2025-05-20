@@ -16,27 +16,27 @@ using namespace std;
 const int MAX_ROWS = 10;
 const int MAX_COLS = 4;
 
-// void write_csv(string filename, string nama_motor, string no_plat, string no_hp, string tgl_masuk){
-//     ofstream data(filename, ios::app);
+void write_csv(string filename, string nama_motor, string no_plat, string no_hp, string tgl_masuk){
+    ofstream data(filename, ios::app);
 
-//     if (data.is_open())
-//     {
-//         // Send the column name to the stream
-//         data << nama_motor;
-//         data << ", ";
-//         data << no_plat;
-//         data << ", ";
-//         data << no_hp;   
-//         data << ", ";
-//         data << tgl_masuk << "\n";   
-//         // Close the file
-//         data.close();
-//     } 
-//     else 
-//     {
-//         cerr << "Gagal membuka file." << endl;
-//     }
-// }
+    if (data.is_open())
+    {
+        // Send the column name to the stream
+        data << nama_motor;
+        data << ", ";
+        data << no_plat;
+        data << ", ";
+        data << no_hp;   
+        data << ", ";
+        data << tgl_masuk << "\n";   
+        // Close the file
+        data.close();
+    } 
+    else 
+    {
+        cerr << "Gagal membuka file." << endl;
+    }
+}
 
 // Fungsi membaca CSV ke array 2D
 int read_csv(const string& filename, string data[MAX_ROWS][MAX_COLS]) {
@@ -263,17 +263,17 @@ int main()
 
     // Send data to the stream
     // string nama_motor, no_plat, no_hp, tgl_masuk;
-    // cout << "Masukkan nama motor: ";
-    // cin.ignore();
-    // getline(cin, nama_motor);
-    // cout << "Masukkan nomor plat motor: ";
-    // getline(cin, no_plat);
-    // cout << "Masukkan nomor hp: ";
-    // getline(cin, no_hp);
-    // cout << "Masukkan tanggal masuk ke bengkel: ";
-    // getline(cin, tgl_masuk);
+    cout << "Masukkan nama motor: ";
+    cin.ignore();
+    getline(cin, nama_motor);
+    cout << "Masukkan nomor plat motor: ";
+    getline(cin, no_plat);
+    cout << "Masukkan nomor hp: ";
+    getline(cin, no_hp);
+    cout << "Masukkan tanggal masuk ke bengkel: ";
+    getline(cin, tgl_masuk);
     
-    // write_csv("data.csv", nama_motor, no_plat, no_hp, tgl_masuk);
+    write_csv("data.csv", nama_motor, no_plat, no_hp, tgl_masuk);
     
     return 0;
 }
