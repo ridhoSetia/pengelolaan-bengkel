@@ -8,3 +8,4 @@ int main(int argc, char const *argv[])
     cout << "baris baru dari branch fitur/crud" << endl;
     return 0;
 }
+
