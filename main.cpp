@@ -12,15 +12,6 @@ struct Akun {
     bool isAdmin;
 };
 
-// Fungsi untuk menghapus spasi di awal dan akhir string
-string trim(const string& str) {
-    std::size_t first = str.find_first_not_of(" \t\r\n");
-    std::size_t last = str.find_last_not_of(" \t\r\n");
-    if (first == string::npos || last == string::npos)
-        return "";
-    return str.substr(first, last - first + 1);
-}
-
 // Fungsi untuk membaca akun dari CSV (pakai stringstream dan string)
 int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
     ifstream file(namaFile);
@@ -38,10 +29,6 @@ int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
         getline(ss, nama, ',');
         getline(ss, password, ',');
         getline(ss, isAdminStr);
-
-        nama = trim(nama); 
-        password = trim(password);
-        isAdminStr = trim(isAdminStr);
 
         bool isAdmin = (isAdminStr == "true");
         daftarAkun[jumlahAkun].nama = nama;
@@ -77,8 +64,6 @@ bool login(Akun daftarAkun[], int jumlahAkun) {
         cout << "Password: ";
         cin >> inputPassword;
 
-        inputNama = trim(inputNama);
-        inputPassword = trim(inputPassword);
 
         for (int i = 0; i < jumlahAkun; i++) {
             if (daftarAkun[i].nama == inputNama && daftarAkun[i].password == inputPassword) {
