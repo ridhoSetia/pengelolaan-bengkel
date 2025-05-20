@@ -64,7 +64,7 @@ void menuAdmin() {
 void menuPegawai() {
     cout << "\n--- Menu Pegawai ---\n";
     cout << "Anda sedang berada di menu pegawai.\n";
-}
+
 
 // Fungsi login
 bool login(Akun daftarAkun[], int jumlahAkun) {
