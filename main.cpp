@@ -2,16 +2,11 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "menu-admin.h"
 
 using namespace std;
 
 const int MAX_AKUN = 100;
-
-struct Akun {
-    string nama;
-    string password;
-    string role;  // "admin" atau "pegawai"
-};
 
 // Fungsi untuk menghapus spasi di awal dan akhir string
 string trim(const string& str) {
@@ -35,17 +30,17 @@ int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
 
     while (getline(file, line) && jumlahAkun < MAX_AKUN) {
         stringstream ss(line);
-        string nama, password, role;
+        string username, password, role;
 
-        getline(ss, nama, ',');
+        getline(ss, username, ',');
         getline(ss, password, ',');
         getline(ss, role);
 
-        nama = trim(nama); 
+        username = trim(username); 
         password = trim(password);
         role = trim(role);
 
-        daftarAkun[jumlahAkun].nama = nama;
+        daftarAkun[jumlahAkun].username = username;
         daftarAkun[jumlahAkun].password = password;
         daftarAkun[jumlahAkun].role = role;
         jumlahAkun++;
@@ -54,17 +49,9 @@ int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
     return jumlahAkun;
 }
 
-// Menu Admin
-void menuAdmin() {
-    cout << "\n--- Menu Admin ---\n";
-    cout << "Anda sedang berada di menu admin.\n";
+void menu_pegawai(){ // ------- PLACEHOLDER. GANTI ATAU HAPUS JIKA SUDAH ADA FUNGSI MENU PEGAWAI -------
+    cout << "Menu Pegawai" << endl;
 }
-
-// Menu Pegawai
-void menuPegawai() {
-    cout << "\n--- Menu Pegawai ---\n";
-    cout << "Anda sedang berada di menu pegawai.\n";
-
 
 // Fungsi login
 bool login(Akun daftarAkun[], int jumlahAkun) {
@@ -82,11 +69,11 @@ bool login(Akun daftarAkun[], int jumlahAkun) {
         inputPassword = trim(inputPassword);
 
         for (int i = 0; i < jumlahAkun; i++) {
-            if (daftarAkun[i].nama == inputNama && daftarAkun[i].password == inputPassword) {
+            if (daftarAkun[i].username == inputNama && daftarAkun[i].password == inputPassword) {
                 if (daftarAkun[i].role == "admin")
-                    menuAdmin();
+                    menu_admin();
                 else
-                    menuPegawai();
+                    menu_pegawai();
                 return true;
             }
         }
