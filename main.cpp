@@ -61,9 +61,10 @@ bool login(Akun daftarAkun[], int jumlahAkun) {
         string inputNama, inputPassword;
 
         cout << "\nUsername: ";
-        cin >> inputNama;
+        cin.ignore(); // flush newline sisa input sebelumnya
+        getline(cin, inputNama);
         cout << "Password: ";
-        cin >> inputPassword;
+        getline(cin, inputPassword);
 
         inputNama = trim(inputNama);
         inputPassword = trim(inputPassword);
