@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+
 using namespace std;
 
 const int MAX_AKUN = 100;
@@ -9,31 +10,44 @@ const int MAX_AKUN = 100;
 struct Akun {
     string nama;
     string password;
-    bool isAdmin;
+    string role;  // "admin" atau "pegawai"
 };
+
+// Fungsi untuk menghapus spasi di awal dan akhir string
+string trim(const string& str) {
+    std::size_t first = str.find_first_not_of(" \t\r\n");
+    std::size_t last = str.find_last_not_of(" \t\r\n");
+    if (first == string::npos || last == string::npos)
+        return "";
+    return str.substr(first, last - first + 1);
+}
 
 // Fungsi untuk membaca akun dari CSV (pakai stringstream dan string)
 int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
     ifstream file(namaFile);
-        if (!file.is_open()) {
+    if (!file.is_open()) {
         cerr << "Gagal membuka file: " << namaFile << endl;
         return 0;
-        }
+    }
+
     string line;
     int jumlahAkun = 0;
 
     while (getline(file, line) && jumlahAkun < MAX_AKUN) {
         stringstream ss(line);
-        string nama, password, isAdminStr;
+        string nama, password, role;
 
         getline(ss, nama, ',');
         getline(ss, password, ',');
-        getline(ss, isAdminStr);
+        getline(ss, role);
 
-        bool isAdmin = (isAdminStr == "true");
+        nama = trim(nama); 
+        password = trim(password);
+        role = trim(role);
+
         daftarAkun[jumlahAkun].nama = nama;
         daftarAkun[jumlahAkun].password = password;
-        daftarAkun[jumlahAkun].isAdmin = isAdmin;
+        daftarAkun[jumlahAkun].role = role;
         jumlahAkun++;
     }
 
@@ -64,10 +78,12 @@ bool login(Akun daftarAkun[], int jumlahAkun) {
         cout << "Password: ";
         cin >> inputPassword;
 
+        inputNama = trim(inputNama);
+        inputPassword = trim(inputPassword);
 
         for (int i = 0; i < jumlahAkun; i++) {
             if (daftarAkun[i].nama == inputNama && daftarAkun[i].password == inputPassword) {
-                if (daftarAkun[i].isAdmin)
+                if (daftarAkun[i].role == "admin")
                     menuAdmin();
                 else
                     menuPegawai();

@@ -1,2 +1,2 @@
-admin1,adminpass,true
-pegawai1,pegawaipass,false
+admin1,adminpass,admin
+pegawai1,pegawaipass,pegawai
