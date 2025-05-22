@@ -100,7 +100,8 @@ int main() {
         cout << "\n--- Menu Utama ---\n";
         cout << "1. Login\n2. Keluar\n";
         cout << "Pilihan: ";
-        cin >> pilihan;
+        getline(cin, pilihan);
+        pilihan = trim(pilihan);
 
         if (pilihan == "1") {
             cin.ignore(); //pindahkan kesini untuk menghindari bug
