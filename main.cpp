@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include "menu-admin.h"
+#include "menu-pegawai.h"
 
 using namespace std;
 
@@ -47,10 +48,6 @@ int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
     }
 
     return jumlahAkun;
-}
-
-void menu_pegawai(){ // ------- PLACEHOLDER. GANTI ATAU HAPUS JIKA SUDAH ADA FUNGSI MENU PEGAWAI -------
-    cout << "Menu Pegawai" << endl;
 }
 
 // Fungsi login
