@@ -104,7 +104,6 @@ int main() {
         pilihan = trim(pilihan);
 
         if (pilihan == "1") {
-            cin.ignore(); //pindahkan kesini untuk menghindari bug
             bool berhasil = login(daftarAkun, jumlahAkun);
             if (!berhasil)
                 selesai = true;
