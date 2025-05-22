@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <ctime>
 
+#include "menu-admin.h"
+
 #ifdef _WIN32
 #include <conio.h>
 #include <windows.h>
@@ -17,16 +19,6 @@ using namespace std;
 
 const int MAX_ROWS = 10;
 const int MAX_COLS = 4;
-
-struct DataBengkel
-{
-    string namaMotor;
-    string noPlat;
-    string noHp;
-    int lama_servis;
-    string statusServis;
-    string tglMasuk;
-};
 
 struct PaketServis
 {
@@ -212,7 +204,7 @@ void servisMotor(const string &filename)
             status = "Dikerjakan";
             tabelAntrean("bengkel.csv", 1, status, "Menunggu");
 
-            sleep(10);
+            // sleep(10);
 
             system("clear || cls");
             cout << "Motor telah selesai diservis" << endl;
@@ -221,7 +213,7 @@ void servisMotor(const string &filename)
             tabelAntrean("bengkel.csv", 1, status, "Menunggu");
 
             cout << "Sedang update antrean" << endl;
-            sleep(5);
+            // sleep(5);
 
             system("clear || cls");
 
