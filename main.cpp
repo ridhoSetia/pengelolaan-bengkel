@@ -58,7 +58,6 @@ bool login(Akun daftarAkun[], int jumlahAkun) {
         string inputNama, inputPassword;
 
         cout << "\nUsername: ";
-        cin.ignore(); // flush newline sisa input sebelumnya
         getline(cin, inputNama);
         cout << "Password: ";
         getline(cin, inputPassword);
@@ -104,6 +103,7 @@ int main() {
         cin >> pilihan;
 
         if (pilihan == "1") {
+            cin.ignore(); //pindahkan kesini untuk menghindari bug
             bool berhasil = login(daftarAkun, jumlahAkun);
             if (!berhasil)
                 selesai = true;
