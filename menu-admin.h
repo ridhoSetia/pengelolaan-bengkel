@@ -1,3 +1,4 @@
+#define byte windows_byte
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -5,6 +6,15 @@
 #include <limits>
 #include <iomanip>
 #include <vector>
+
+#ifdef _WIN32
+#include <conio.h>
+#include <windows.h>
+#undef byte
+#else
+#include <termios.h>
+#include <unistd.h>
+#endif
 
 using namespace std;
 
@@ -29,66 +39,186 @@ void rekrutPegawai();
 void pecatPegawai();
 void daftarPegawai();
 
+const char *adminMenuItems[] = {
+    "1. Lihat Antrean",
+    "2. Lihat Laporan",
+    "3. Manajemen Akun Pegawai",
+    "0. Keluar"
+};
+const int adminMenuSize = sizeof(adminMenuItems) / sizeof(adminMenuItems[0]);
+
+const char *subMenuItems[] = {
+    "1. Rekrut Pegawai",
+    "2. Pecat Pegawai",
+    "3. Daftar Pegawai",
+    "0. Kembali"
+};
+const int subMenuSize = sizeof(subMenuItems) / sizeof(subMenuItems[0]);
+
+#ifdef _WIN32
+void clearTerminal() {
+    system("cls");
+}
+#else
+int _getch() {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+void clearTerminal() {
+    system("clear");
+}
+#endif
+
+void displayMenu(const char *menuItems[], int menuSize, int currentSelection) {
+    clearTerminal();
+    cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
+    for (int i = 0; i < menuSize; i++) {
+        if (i == currentSelection)
+            cout << " -> " << menuItems[i] << "\n";
+        else
+            cout << "     " << menuItems[i] << "\n";
+    }
+}
+
+void handleInput(int &currentSelection, int menuSize) {
+    while (true) {
+        displayMenu(adminMenuItems, adminMenuSize, currentSelection);
+        int key = _getch();
+#ifdef _WIN32
+        if (key == 224) {
+            int arrow = _getch();
+            if (arrow == 72) { // Up
+                currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+            } else if (arrow == 80) { // Down
+                currentSelection = (currentSelection + 1) % menuSize;
+            }
+        } else if (key == 13) { // Enter
+            break;
+        }
+#else
+        if (key == 27) {
+            int second = _getch();
+            if (second == 91) {
+                int arrow = _getch();
+                if (arrow == 65) { // Up
+                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+                } else if (arrow == 66) { // Down
+                    currentSelection = (currentSelection + 1) % menuSize;
+                }
+            }
+        } else if (key == 10) { // Enter
+            break;
+        }
+#endif
+    }
+}
+
+void handleSubMenuInput(int &currentSelection, int menuSize) {
+    while (true) {
+        displayMenu(subMenuItems, subMenuSize, currentSelection);
+        int key = _getch();
+#ifdef _WIN32
+        if (key == 224) {
+            int arrow = _getch();
+            if (arrow == 72) { // Up
+                currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+            } else if (arrow == 80) { // Down
+                currentSelection = (currentSelection + 1) % menuSize;
+            }
+        } else if (key == 13) { // Enter
+            break;
+        }
+#else
+        if (key == 27) {
+            int second = _getch();
+            if (second == 91) {
+                int arrow = _getch();
+                if (arrow == 65) { // Up
+                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+                } else if (arrow == 66) { // Down
+                    currentSelection = (currentSelection + 1) % menuSize;
+                }
+            }
+        } else if (key == 10) { // Enter
+            break;
+        }
+#endif
+    }
+}
+
 void menu_admin() {
     int pilihan;
+    int currentSelection = 0;
     do {
-        cout << "\n=== Menu Admin ===\n";
-        cout << "1. Lihat Antrean\n";
-        cout << "2. Lihat Laporan\n";
-        cout << "3. Manajemen Akun Pegawai\n";
-        cout << "0. Keluar\n";
-        cout << "Pilih: ";
-        cin >> pilihan;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        handleInput(currentSelection, adminMenuSize);
+        pilihan = currentSelection;
+        clearTerminal();
 
         switch (pilihan) {
-            case 1:
+            case 0: // Lihat Antrean
                 tampilkan_antrean();
+                cout << "Tekan enter untuk kembali\n";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 break;
-            case 2:
+            case 1: // Lihat Laporan
                 tampilkan_laporan();
+                cout << "Tekan enter untuk kembali\n";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 break;
-            case 3: {
+            case 2: { // Manajemen Akun Pegawai
                 int subPilihan;
+                int subCurrentSelection = 0;
                 do {
-                    cout << "\n=== Manajemen Akun Pegawai ===\n";
-                    cout << "1. Rekrut Pegawai\n";
-                    cout << "2. Pecat Pegawai\n";
-                    cout << "3. Daftar Pegawai\n";
-                    cout << "0. Kembali\n";
-                    cout << "Pilih: ";
-                    cin >> subPilihan;
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    handleSubMenuInput(subCurrentSelection, subMenuSize);
+                    subPilihan = subCurrentSelection;
+                    clearTerminal();
 
                     switch (subPilihan) {
-                        case 1:
+                        case 0: // Rekrut Pegawai
                             rekrutPegawai();
+                            cout << "Tekan enter untuk kembali\n";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             break;
-                        case 2:
+                        case 1: // Pecat Pegawai
                             pecatPegawai();
+                            cout << "Tekan enter untuk kembali\n";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             break;
-                        case 3:
+                        case 2: // Daftar Pegawai
                             daftarPegawai();
+                            cout << "Tekan enter untuk kembali\n";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             break;
-                        case 0:
+                        case 3: // Kembali
                             break;
                         default:
                             cout << "Pilihan tidak valid. Silakan coba lagi.\n";
+                            cout << "Tekan enter untuk kembali\n";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
                     }
-                } while (subPilihan != 0);
+                } while (subPilihan != 3);
                 break;
             }
-            case 0:
+            case 3: // Keluar
                 cout << "Keluar dari menu admin.\n";
                 break;
             default:
                 cout << "Pilihan tidak valid. Silakan coba lagi.\n";
+                cout << "Tekan enter untuk kembali\n";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
-    } while (pilihan != 0);
+    } while (pilihan != 3);
 }
 
 void tampilkan_antrean() {
-    ifstream file("data.csv");
+    ifstream file("bengkel.csv");
     if (!file.is_open()) {
         cout << "Gagal membuka file antrean atau belum ada data.\n";
         return;
@@ -107,7 +237,7 @@ void tampilkan_antrean() {
         try {
             bengkel.lama_servis = stoi(lama_servis_str);
         } catch (...) {
-            bengkel.lama_servis = 0; // Default value if conversion fails
+            bengkel.lama_servis = 0;
         }
         getline(ss, bengkel.statusServis, ',');
         getline(ss, bengkel.tglMasuk, ',');
@@ -120,22 +250,23 @@ void tampilkan_antrean() {
         return;
     }
 
-    cout << "\n=== Daftar Antrean Bengkel ===\n";
-    cout << setw(20) << left << "Nama Motor" 
-         << setw(15) << "No. Plat" 
-         << setw(15) << "No. HP" 
-         << setw(10) << "Lama Servis" 
-         << setw(15) << "Status" 
-         << setw(15) << "Tgl Masuk" << endl;
-    cout << string(90, '-') << endl;
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
+    cout << "| No |      Nama Motor      | Plat Nomor |    No HP     | Lama Servis | Status Servis | Tanggal Masuk |\n";
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
+
+    int rowNumber = 1;
     for (const auto& m : antrean) {
-        cout << setw(20) << left << m.namaMotor 
-             << setw(15) << m.noPlat 
-             << setw(15) << m.noHp 
-             << setw(10) << m.lama_servis 
-             << setw(15) << m.statusServis 
-             << setw(15) << m.tglMasuk << endl;
+        cout << "| " << setw(3) << left << rowNumber;
+        cout << "| " << setw(21) << left << m.namaMotor;
+        cout << "| " << setw(11) << left << m.noPlat;
+        cout << "| " << setw(13) << left << m.noHp;
+        cout << "| " << setw(12) << left << (m.lama_servis ? to_string(m.lama_servis) + " jam" : "");
+        cout << "| " << setw(14) << left << m.statusServis;
+        cout << "| " << setw(14) << left << m.tglMasuk;
+        cout << "|\n";
+        rowNumber++;
     }
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
 }
 
 void tampilkan_laporan() {
@@ -158,7 +289,7 @@ void tampilkan_laporan() {
         try {
             bengkel.lama_servis = stoi(lama_servis_str);
         } catch (...) {
-            bengkel.lama_servis = 0; // Default value if conversion fails
+            bengkel.lama_servis = 0;
         }
         getline(ss, bengkel.statusServis, ',');
         getline(ss, bengkel.tglMasuk, ',');
@@ -171,22 +302,24 @@ void tampilkan_laporan() {
         return;
     }
 
-    cout << "\n=== Lapor Servis Bengkel ===\n";
-    cout << setw(20) << left << "Nama Motor" 
-         << setw(15) << "No. Plat" 
-         << setw(15) << "No. HP" 
-         << setw(10) << "Lama Servis" 
-         << setw(15) << "Status" 
-         << setw(15) << "Tgl Masuk" << endl;
-    cout << string(90, '-') << endl;
+    // Header tabel
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
+    cout << "| No |      Nama Motor      | Plat Nomor |    No HP     | Lama Servis | Status Servis | Tanggal Masuk |\n";
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
+
+    int rowNumber = 1;
     for (const auto& m : laporan) {
-        cout << setw(20) << left << m.namaMotor 
-             << setw(15) << m.noPlat 
-             << setw(15) << m.noHp 
-             << setw(10) << m.lama_servis 
-             << setw(15) << m.statusServis 
-             << setw(15) << m.tglMasuk << endl;
+        cout << "| " << setw(3) << left << rowNumber;
+        cout << "| " << setw(21) << left << m.namaMotor;
+        cout << "| " << setw(11) << left << m.noPlat;
+        cout << "| " << setw(13) << left << m.noHp;
+        cout << "| " << setw(12) << left << (m.lama_servis ? to_string(m.lama_servis) + " jam" : "");
+        cout << "| " << setw(14) << left << m.statusServis;
+        cout << "| " << setw(14) << left << m.tglMasuk;
+        cout << "|\n";
+        rowNumber++;
     }
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
 }
 
 void rekrutPegawai() {
@@ -301,10 +434,18 @@ void daftarPegawai() {
         return;
     }
 
-    cout << "\n=== Daftar Pegawai ===\n";
-    cout << setw(20) << left << "Username" << setw(15) << "Role" << endl;
-    cout << string(35, '-') << endl;
+    // Header tabel
+    cout << "+----+----------------------+---------------+\n";
+    cout << "| No |      Username        |     Role      |\n";
+    cout << "+----+----------------------+---------------+\n";
+
+    int rowNumber = 1;
     for (const auto& a : akunList) {
-        cout << setw(20) << left << a.username << setw(15) << a.role << endl;
+        cout << "| " << setw(3) << left << rowNumber;
+        cout << "| " << setw(21) << left << a.username;
+        cout << "| " << setw(14) << left << a.role;
+        cout << "|\n";
+        rowNumber++;
     }
+    cout << "+----+----------------------+---------------+\n";
 }
