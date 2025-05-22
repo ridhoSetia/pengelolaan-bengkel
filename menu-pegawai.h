@@ -195,7 +195,7 @@ void servisMotor(const string &filename)
         system("clear || cls");
 
         string status = "tunggu konfirmasi";
-        tabelAntrean("data.csv", 1, status, "Menunggu");
+        tabelAntrean("bengkel.csv", 1, status, "Menunggu");
 
         cout << "Lakukan Servis (y/t)? : ";
         cin >> mulai;
@@ -210,7 +210,7 @@ void servisMotor(const string &filename)
             cout << "Proses servis motor " << namaMotor << " sedang dilakukan" << endl;
 
             status = "Dikerjakan";
-            tabelAntrean("data.csv", 1, status, "Menunggu");
+            tabelAntrean("bengkel.csv", 1, status, "Menunggu");
 
             sleep(10);
 
@@ -218,19 +218,19 @@ void servisMotor(const string &filename)
             cout << "Motor telah selesai diservis" << endl;
 
             status = "Selesai";
-            tabelAntrean("data.csv", 1, status, "Menunggu");
+            tabelAntrean("bengkel.csv", 1, status, "Menunggu");
 
             cout << "Sedang update antrean" << endl;
             sleep(5);
 
             system("clear || cls");
 
-            hapusDataMotor("data.csv", 0); // hapus antrean pertama
+            hapusDataMotor("bengkel.csv", 0); // hapus antrean pertama
 
             status = "";
-            tabelAntrean("data.csv", 1, status, "Menunggu");
+            tabelAntrean("bengkel.csv", 1, status, "Menunggu");
 
-            if (isCSVKosong("data.csv"))
+            if (isCSVKosong("bengkel.csv"))
             {
                 system("clear || cls");
                 cout << "Servis dihentikan, karena tidak ada antrean motor lagi" << endl;
@@ -243,7 +243,7 @@ void servisMotor(const string &filename)
             break;
         }
 
-    } while (mulai == "y" && !isCSVKosong("data.csv"));
+    } while (mulai == "y" && !isCSVKosong("bengkel.csv"));
 }
 
 void updateDataMotor(const string &filename)
@@ -477,25 +477,25 @@ int menu_pegawai()
         clearScreen();
         if (AdaDalamTeks(menuItems[currentSelection], '1'))
         {
-            tambahMotor("data.csv", motor.namaMotor, motor.noPlat, motor.noHp, motor.lama_servis, tanggalMasuk());
+            tambahMotor("bengkel.csv", motor.namaMotor, motor.noPlat, motor.noHp, motor.lama_servis, tanggalMasuk());
             handleInput();
             clearScreen();
         }
         else if (AdaDalamTeks(menuItems[currentSelection], '2'))
         {
-            tabelAntrean("data.csv", 1, "tunggu konfirmasi", "Menunggu");
+            tabelAntrean("bengkel.csv", 1, "tunggu konfirmasi", "Menunggu");
             cout << "Tekan enter untuk keluar" << endl;
             cin.ignore();
         }
         else if (AdaDalamTeks(menuItems[currentSelection], '3'))
         {
-            servisMotor("data.csv");
+            servisMotor("bengkel.csv");
             handleInput();
             clearScreen();
         }
         else if (AdaDalamTeks(menuItems[currentSelection], '4'))
         {
-            updateDataMotor("data.csv");
+            updateDataMotor("bengkel.csv");
             handleInput();
             clearScreen();
         }
@@ -506,7 +506,7 @@ int menu_pegawai()
             cin >> hapus;
             cout << hapus << endl;
         
-            hapusDataMotor("data.csv", hapus - 1);
+            hapusDataMotor("bengkel.csv", hapus - 1);
             handleInput();
             clearScreen();
         }
