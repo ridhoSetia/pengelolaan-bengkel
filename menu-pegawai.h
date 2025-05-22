@@ -214,7 +214,7 @@ void servisMotor(const string &filename)
 
             cout << "Sedang update antrean" << endl;
             // sleep(5);
-
+            
             system("clear || cls");
 
             hapusDataMotor("bengkel.csv", 0); // hapus antrean pertama
