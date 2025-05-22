@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <limits>
@@ -7,19 +8,20 @@
 
 using namespace std;
 
-struct DataMotor {
+struct DataBengkel {
     string namaMotor;
     string noPlat;
     string noHp;
+    int lama_servis;
+    string statusServis;
     string tglMasuk;
 };
 
 struct Akun {
     string username;
     string password;
-    string role; // "admin" atau "pegawai"
+    string role; // "admin" or "pegawai"
 };
-
 
 void tampilkan_antrean();
 void tampilkan_laporan();
@@ -30,41 +32,58 @@ void daftarPegawai();
 void menu_admin() {
     int pilihan;
     do {
-        cout << "\nMenu Admin:\n1. Lihat Antrean\n2. Lihat Laporan\n3. Manajemen Akun Pegawai\n0. Keluar\nPilih: ";
+        cout << "\n=== Menu Admin ===\n";
+        cout << "1. Lihat Antrean\n";
+        cout << "2. Lihat Laporan\n";
+        cout << "3. Manajemen Akun Pegawai\n";
+        cout << "0. Keluar\n";
+        cout << "Pilih: ";
         cin >> pilihan;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-        if (pilihan == 1) {
-            tampilkan_antrean();
+        switch (pilihan) {
+            case 1:
+                tampilkan_antrean();
+                break;
+            case 2:
+                tampilkan_laporan();
+                break;
+            case 3: {
+                int subPilihan;
+                do {
+                    cout << "\n=== Manajemen Akun Pegawai ===\n";
+                    cout << "1. Rekrut Pegawai\n";
+                    cout << "2. Pecat Pegawai\n";
+                    cout << "3. Daftar Pegawai\n";
+                    cout << "0. Kembali\n";
+                    cout << "Pilih: ";
+                    cin >> subPilihan;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-        } else if (pilihan == 2) {
-            tampilkan_laporan();
-
-        } else if (pilihan == 3) {
-            int subPilihan;
-            do {
-                cout << "\nManajemen Akun Pegawai:\n1. Rekrut Pegawai\n2. Pecat Pegawai\n3. Daftar Pegawai\n0. Keluar\nPilih: ";
-                cin >> subPilihan;
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-                if (subPilihan == 1) {
-                    rekrutPegawai();
-
-                } else if (subPilihan == 2) {
-                    pecatPegawai();
-
-                } else if (subPilihan == 3) {
-                    daftarPegawai();
-
-                } else if (subPilihan != 0) {
-                    cout << "Pilihan tidak valid.\n";
-                }
-            } while (subPilihan != 0);
-
-        } else if (pilihan != 0) {
-            cout << "Pilihan tidak valid.\n";
+                    switch (subPilihan) {
+                        case 1:
+                            rekrutPegawai();
+                            break;
+                        case 2:
+                            pecatPegawai();
+                            break;
+                        case 3:
+                            daftarPegawai();
+                            break;
+                        case 0:
+                            break;
+                        default:
+                            cout << "Pilihan tidak valid. Silakan coba lagi.\n";
+                    }
+                } while (subPilihan != 0);
+                break;
+            }
+            case 0:
+                cout << "Keluar dari menu admin.\n";
+                break;
+            default:
+                cout << "Pilihan tidak valid. Silakan coba lagi.\n";
         }
-
     } while (pilihan != 0);
 }
 
@@ -75,17 +94,24 @@ void tampilkan_antrean() {
         return;
     }
 
-    vector<DataMotor> antrean;
-    DataMotor motor;
+    vector<DataBengkel> antrean;
     string line;
-
     while (getline(file, line)) {
         stringstream ss(line);
-        getline(ss, motor.namaMotor, ',');
-        getline(ss, motor.noPlat, ',');
-        getline(ss, motor.noHp, ',');
-        getline(ss, motor.tglMasuk);
-        antrean.push_back(motor);
+        DataBengkel bengkel;
+        getline(ss, bengkel.namaMotor, ',');
+        getline(ss, bengkel.noPlat, ',');
+        getline(ss, bengkel.noHp, ',');
+        string lama_servis_str;
+        getline(ss, lama_servis_str, ',');
+        try {
+            bengkel.lama_servis = stoi(lama_servis_str);
+        } catch (...) {
+            bengkel.lama_servis = 0; // Default value if conversion fails
+        }
+        getline(ss, bengkel.statusServis, ',');
+        getline(ss, bengkel.tglMasuk, ',');
+        antrean.push_back(bengkel);
     }
     file.close();
 
@@ -94,10 +120,21 @@ void tampilkan_antrean() {
         return;
     }
 
-    cout << "\nDaftar Antrean Motor:\n";
-    cout << setw(20) << "Nama Motor" << setw(15) << "No. Plat" << setw(15) << "No. HP" << setw(15) << "Tgl Masuk" << endl;
+    cout << "\n=== Daftar Antrean Bengkel ===\n";
+    cout << setw(20) << left << "Nama Motor" 
+         << setw(15) << "No. Plat" 
+         << setw(15) << "No. HP" 
+         << setw(10) << "Lama Servis" 
+         << setw(15) << "Status" 
+         << setw(15) << "Tgl Masuk" << endl;
+    cout << string(90, '-') << endl;
     for (const auto& m : antrean) {
-        cout << setw(20) << m.namaMotor << setw(15) << m.noPlat << setw(15) << m.noHp << setw(15) << m.tglMasuk << endl;
+        cout << setw(20) << left << m.namaMotor 
+             << setw(15) << m.noPlat 
+             << setw(15) << m.noHp 
+             << setw(10) << m.lama_servis 
+             << setw(15) << m.statusServis 
+             << setw(15) << m.tglMasuk << endl;
     }
 }
 
@@ -108,17 +145,24 @@ void tampilkan_laporan() {
         return;
     }
 
-    vector<DataMotor> laporan;
-    DataMotor motor;
+    vector<DataBengkel> laporan;
     string line;
-
     while (getline(file, line)) {
         stringstream ss(line);
-        getline(ss, motor.namaMotor, ',');
-        getline(ss, motor.noPlat, ',');
-        getline(ss, motor.noHp, ',');
-        getline(ss, motor.tglMasuk);
-        laporan.push_back(motor);
+        DataBengkel bengkel;
+        getline(ss, bengkel.namaMotor, ',');
+        getline(ss, bengkel.noPlat, ',');
+        getline(ss, bengkel.noHp, ',');
+        string lama_servis_str;
+        getline(ss, lama_servis_str, ',');
+        try {
+            bengkel.lama_servis = stoi(lama_servis_str);
+        } catch (...) {
+            bengkel.lama_servis = 0; // Default value if conversion fails
+        }
+        getline(ss, bengkel.statusServis, ',');
+        getline(ss, bengkel.tglMasuk, ',');
+        laporan.push_back(bengkel);
     }
     file.close();
 
@@ -127,10 +171,21 @@ void tampilkan_laporan() {
         return;
     }
 
-    cout << "\nLaporan Servis Motor:\n";
-    cout << setw(20) << "Nama Motor" << setw(15) << "No. Plat" << setw(15) << "No. HP" << setw(15) << "Tgl Masuk" << endl;
+    cout << "\n=== Lapor Servis Bengkel ===\n";
+    cout << setw(20) << left << "Nama Motor" 
+         << setw(15) << "No. Plat" 
+         << setw(15) << "No. HP" 
+         << setw(10) << "Lama Servis" 
+         << setw(15) << "Status" 
+         << setw(15) << "Tgl Masuk" << endl;
+    cout << string(90, '-') << endl;
     for (const auto& m : laporan) {
-        cout << setw(20) << m.namaMotor << setw(15) << m.noPlat << setw(15) << m.noHp << setw(15) << m.tglMasuk << endl;
+        cout << setw(20) << left << m.namaMotor 
+             << setw(15) << m.noPlat 
+             << setw(15) << m.noHp 
+             << setw(10) << m.lama_servis 
+             << setw(15) << m.statusServis 
+             << setw(15) << m.tglMasuk << endl;
     }
 }
 
@@ -140,9 +195,9 @@ void rekrutPegawai() {
     getline(cin, akun.username);
     cout << "Masukkan password baru: ";
     getline(cin, akun.password);
-    akun.role = "pegawai"; // Set default role sebagai pegawai
+    akun.role = "pegawai";
 
-    // Cek apakah username sudah ada
+    // Check if username already exists
     ifstream file("akun.csv");
     string line;
     bool usernameExists = false;
@@ -162,7 +217,7 @@ void rekrutPegawai() {
         return;
     }
 
-    // Simpan akun baru ke file
+    // Save new account to file
     ofstream outFile("akun.csv", ios::app);
     if (!outFile.is_open()) {
         cout << "Gagal membuka file akun.\n";
@@ -178,7 +233,7 @@ void pecatPegawai() {
     cout << "\nMasukkan username pegawai yang akan dipecat: ";
     getline(cin, username);
 
-    // Baca semua akun dari file
+    // Read all accounts from file
     ifstream file("akun.csv");
     if (!file.is_open()) {
         cout << "Gagal membuka file akun atau belum ada data.\n";
@@ -195,9 +250,9 @@ void pecatPegawai() {
         getline(ss, akun.password, ',');
         getline(ss, akun.role);
         if (akun.username == username && akun.role == "pegawai") {
-            found = true; // Tandai bahwa akun ditemukan
+            found = true;
         } else {
-            akunList.push_back(akun); // Simpan akun lain
+            akunList.push_back(akun);
         }
     }
     file.close();
@@ -207,7 +262,7 @@ void pecatPegawai() {
         return;
     }
 
-    // Tulis kembali akun yang tidak dihapus ke file
+    // Write back accounts excluding the deleted one
     ofstream outFile("akun.csv");
     if (!outFile.is_open()) {
         cout << "Gagal membuka file akun.\n";
@@ -235,7 +290,7 @@ void daftarPegawai() {
         getline(ss, akun.username, ',');
         getline(ss, akun.password, ',');
         getline(ss, akun.role);
-        if (akun.role == "pegawai") { // Hanya tampilkan akun dengan role pegawai
+        if (akun.role == "pegawai") {
             akunList.push_back(akun);
         }
     }
@@ -246,9 +301,10 @@ void daftarPegawai() {
         return;
     }
 
-    cout << "\nDaftar Pegawai:\n";
-    cout << setw(20) << "Username" << setw(15) << "Role" << endl;
+    cout << "\n=== Daftar Pegawai ===\n";
+    cout << setw(20) << left << "Username" << setw(15) << "Role" << endl;
+    cout << string(35, '-') << endl;
     for (const auto& a : akunList) {
-        cout << setw(20) << a.username << setw(15) << a.role << endl;
+        cout << setw(20) << left << a.username << setw(15) << a.role << endl;
     }
 }

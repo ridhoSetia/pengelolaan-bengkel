@@ -249,7 +249,7 @@ void servisMotor(const string &filename)
 void updateDataMotor(const string &filename)
 {
     int inputRow;
-    DataMotor motor;
+    DataBengkel motor;
 
     cout << "Pilih antrean yang ingin diupdate: ";
     cin >> inputRow;
