@@ -18,7 +18,7 @@ using namespace std;
 const int MAX_ROWS = 10;
 const int MAX_COLS = 4;
 
-struct DataMotor
+struct DataBengkel
 {
     string namaMotor;
     string noPlat;
@@ -469,7 +469,7 @@ bool AdaDalamTeks(const string &teks, char yangDicari)
 
 int menu_pegawai()
 {
-    DataMotor motor;
+    DataBengkel motor;
 
     while (true)
     {
