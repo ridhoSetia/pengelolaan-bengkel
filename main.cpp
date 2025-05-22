@@ -89,11 +89,12 @@ bool login(Akun daftarAkun[], int jumlahAkun) {
 }
 
 // Main Program
+// TO DO: fix boot loop jika nginput random di menu
 int main() {
     Akun daftarAkun[MAX_AKUN];
     int jumlahAkun = bacaAkunDariCSV("akun.csv", daftarAkun);
 
-    int pilihan;
+    string pilihan;
     bool selesai = false;
 
     while (!selesai) {
@@ -102,11 +103,11 @@ int main() {
         cout << "Pilihan: ";
         cin >> pilihan;
 
-        if (pilihan == 1) {
+        if (pilihan == "1") {
             bool berhasil = login(daftarAkun, jumlahAkun);
             if (!berhasil)
                 selesai = true;
-        } else if (pilihan == 2) {
+        } else if (pilihan == "2") {
             selesai = true;
         } else {
             cout << "Pilihan tidak valid.\n";

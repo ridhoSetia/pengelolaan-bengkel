@@ -1,3 +1,4 @@
+#define byte windows_byte
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -5,11 +6,10 @@
 #include <iomanip>
 #include <ctime>
 
-#include "menu-admin.h"
-
 #ifdef _WIN32
 #include <conio.h>
 #include <windows.h>
+#undef byte
 #else
 #include <termios.h>
 #include <unistd.h>
