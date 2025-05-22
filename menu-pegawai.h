@@ -5,8 +5,6 @@
 #include <iomanip>
 #include <ctime>
 
-#include "menu-admin.h"
-
 #ifdef _WIN32
 #include <conio.h>
 #include <windows.h>
