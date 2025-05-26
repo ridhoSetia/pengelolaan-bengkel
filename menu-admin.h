@@ -8,6 +8,7 @@
 #include <vector>
 #include <stdexcept>
 #include <ctime>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -472,13 +473,10 @@ void rekrutPegawai() {
 
 void pecatPegawai() {
     try {
-        string username;
-        cout << "\nMasukkan username pegawai yang akan dipecat: ";
-        if (!getline(cin, username)) {
-            throw runtime_error("Gagal membaca username.");
-        }
-        if (username.empty() || username.find(',') != string::npos) {
-            throw runtime_error("Username tidak boleh kosong atau mengandung koma.");
+        string keyword;
+        cout << "\nMasukkan kata kunci untuk mencari username pegawai: ";
+        if (!getline(cin, keyword)) {
+            throw runtime_error("Gagal membaca kata kunci.");
         }
 
         ifstream file("akun.csv");
@@ -487,27 +485,90 @@ void pecatPegawai() {
         }
 
         vector<Akun> akunList;
-        Akun akun;
+        vector<Akun> filteredList;
         string line;
-        bool found = false;
+        bool hasData = false;
         while (getline(file, line)) {
+            line.erase(0, line.find_first_not_of(" \t\r\n"));
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);
             if (line.empty()) continue;
             stringstream ss(line);
+            Akun akun;
             if (!getline(ss, akun.username, ',')) continue;
             if (!getline(ss, akun.password, ',')) continue;
             if (!getline(ss, akun.role)) continue;
-            if (akun.username == username && akun.role == "pegawai") {
-                found = true;
+            if (akun.role == "pegawai") {
+                akunList.push_back(akun);
+                // Case-insensitive search
+                string usernameLower = akun.username;
+                string keywordLower = keyword;
+                transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
+                transform(keywordLower.begin(), keywordLower.end(), keywordLower.begin(), ::tolower);
+                if (keyword.empty() || usernameLower.find(keywordLower) != string::npos) {
+                    filteredList.push_back(akun);
+                    hasData = true;
+                }
             } else {
                 akunList.push_back(akun);
             }
         }
         file.close();
 
-        if (!found) {
-            throw runtime_error("Pegawai dengan username tersebut tidak ditemukan atau bukan pegawai.");
+        if (!hasData) {
+            cout << "Tidak ada pegawai yang cocok dengan kata kunci '" << keyword << "'.\n";
+            return;
         }
 
+        // Tampilkan hasil pencarian
+        cout << "\nHasil pencarian:\n";
+        cout << "+----+----------------------+---------------+\n";
+        cout << "| No |      Username        |     Role      |\n";
+        cout << "+----+----------------------+---------------+\n";
+        int rowNumber = 1;
+        for (const auto& a : filteredList) {
+            cout << "| " << setw(3) << left << rowNumber;
+            cout << "| " << setw(21) << left << (a.username.empty() ? "N/A" : a.username);
+            cout << "| " << setw(14) << left << (a.role.empty() ? "N/A" : a.role);
+            cout << "|\n";
+            rowNumber++;
+        }
+        cout << "+----+----------------------+---------------+\n";
+
+        // Pilih pegawai untuk dipecat
+        cout << "Masukkan nomor pegawai yang akan dipecat (1-" << filteredList.size() << "): ";
+        string input;
+        if (!getline(cin, input)) {
+            throw runtime_error("Gagal membaca nomor pilihan.");
+        }
+        int choice;
+        try {
+            choice = stoi(input);
+        } catch (const invalid_argument&) {
+            throw runtime_error("Input harus berupa angka.");
+        }
+        if (choice < 1 || choice > static_cast<int>(filteredList.size())) {
+            throw runtime_error("Nomor pilihan tidak valid.");
+        }
+
+        // Konfirmasi pemecatan
+        string usernameToDelete = filteredList[choice - 1].username;
+        cout << "Apakah Anda yakin ingin memecat pegawai dengan username '" << usernameToDelete << "'? (y/n): ";
+        char confirm;
+        cin >> confirm;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (tolower(confirm) != 'y') {
+            cout << "Pemecatan dibatalkan.\n";
+            return;
+        }
+
+        // Hapus pegawai dari akunList
+        akunList.erase(
+            remove_if(akunList.begin(), akunList.end(),
+                [&usernameToDelete](const Akun& a) { return a.username == usernameToDelete && a.role == "pegawai"; }),
+            akunList.end()
+        );
+
+        // Tulis kembali ke file
         ofstream outFile("akun.csv");
         if (!outFile.is_open()) {
             throw runtime_error("Gagal membuka file akun.csv untuk menulis.");
@@ -516,7 +577,7 @@ void pecatPegawai() {
             outFile << a.username << "," << a.password << "," << a.role << "\n";
         }
         outFile.close();
-        cout << "Pegawai berhasil dipecat.\n";
+        cout << "Pegawai dengan username '" << usernameToDelete << "' berhasil dipecat.\n";
     } catch (const exception& e) {
         cout << "Error memecat pegawai: " << e.what() << "\n";
     }
