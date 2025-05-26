@@ -58,6 +58,12 @@ const char *subMenuItems[] = {
 };
 const int subMenuSize = sizeof(subMenuItems) / sizeof(subMenuItems[0]);
 
+const char *sortMenuItems[] = {
+    "1. A-Z (ascending)",
+    "2. Z-A (descending)"
+};
+const int sortMenuSize = sizeof(sortMenuItems) / sizeof(sortMenuItems[0]);
+
 #ifdef _WIN32
 void clearTerminal() {
     system("cls");
@@ -169,6 +175,46 @@ void handleSubMenuInput(int &currentSelection, int menuSize) {
 #endif
         } catch (const exception& e) {
             cout << "Error handling submenu input: " << e.what() << "\n";
+            cout << "Tekan enter untuk kembali\n";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            break;
+        }
+    }
+}
+
+void handleSortMenuInput(int &currentSelection, int menuSize) {
+    while (true) {
+        try {
+            displayMenu(sortMenuItems, sortMenuSize, currentSelection);
+            int key = _getch();
+#ifdef _WIN32
+            if (key == 224) {
+                int arrow = _getch();
+                if (arrow == 72) { // Up
+                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+                } else if (arrow == 80) { // Down
+                    currentSelection = (currentSelection + 1) % menuSize;
+                }
+            } else if (key == 13) { // Enter
+                break;
+            }
+#else
+            if (key == 27) {
+                int second = _getch();
+                if (second == 91) {
+                    int arrow = _getch();
+                    if (arrow == 65) { // Up
+                        currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+                    } else if (arrow == 66) { // Down
+                        currentSelection = (currentSelection + 1) % menuSize;
+                    }
+                }
+            } else if (key == 10) { // Enter
+                break;
+            }
+#endif
+        } catch (const exception& e) {
+            cout << "Error handling sort menu input: " << e.what() << "\n";
             cout << "Tekan enter untuk kembali\n";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             break;
@@ -622,6 +668,37 @@ void daftarPegawai() {
             return;
         }
 
+        // Pilih urutan pengurutan dengan menu arrow
+        cout << "\nPilih urutan pengurutan:\n";
+        int sortSelection = 0;
+        handleSortMenuInput(sortSelection, sortMenuSize);
+        int sortChoice = sortSelection + 1; // Adjust to match original 1-based indexing
+
+        // Urutkan akunList berdasarkan pilihan
+        if (sortChoice == 1) {
+            // A-Z (ascending)
+            sort(akunList.begin(), akunList.end(),
+                 [](const Akun& a, const Akun& b) {
+                     string usernameA = a.username;
+                     string usernameB = b.username;
+                     transform(usernameA.begin(), usernameA.end(), usernameA.begin(), ::tolower);
+                     transform(usernameB.begin(), usernameB.end(), usernameB.begin(), ::tolower);
+                     return usernameA < usernameB;
+                 });
+        } else if (sortChoice == 2) {
+            // Z-A (descending)
+            sort(akunList.begin(), akunList.end(),
+                 [](const Akun& a, const Akun& b) {
+                     string usernameA = a.username;
+                     string usernameB = b.username;
+                     transform(usernameA.begin(), usernameA.end(), usernameA.begin(), ::tolower);
+                     transform(usernameB.begin(), usernameB.end(), usernameB.begin(), ::tolower);
+                     return usernameA > usernameB;
+                 });
+        }
+
+        clearTerminal();
+        cout << "\nDaftar Pegawai:\n";
         cout << "+----+----------------------+---------------+\n";
         cout << "| No |      Username        |     Role      |\n";
         cout << "+----+----------------------+---------------+\n";
