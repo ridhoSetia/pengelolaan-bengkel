@@ -28,6 +28,117 @@ struct PaketServis {
 void hapusDataMotor(const string &filename, int rowToDelete);
 string tanggalMasuk();
 
+const char *menuItems[] = {
+    "1. Tambah Motor",
+    "2. Lihat Antrean",
+    "3. Servis Motor",
+    "4. Hapus Motor",
+    "0. Keluar"};
+
+const int menuSize = sizeof(menuItems) / sizeof(menuItems[0]);
+int currentSelection = 0;
+
+#ifdef _WIN32
+void clearScreen() {
+    system("cls");
+}
+#else
+int _getch() {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+
+void clearScreen() {
+    system("clear");
+}
+#endif
+
+bool AdaDalamTeks(const string &teks, char yangDicari) {
+    return teks.find(yangDicari) != string::npos;
+}
+
+string tanggalMasuk() {
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    char buffer[11];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d", ltm);
+    return string(buffer);
+}
+
+void displayMenu() {
+    clearScreen();
+    cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
+    for (int i = 0; i < menuSize; i++) {
+        if (i == currentSelection)
+            cout << " -> " << menuItems[i] << "\n";
+        else
+            cout << "     " << menuItems[i] << "\n";
+    }
+}
+
+void handleInput() {
+    while (true) {
+        displayMenu();
+        int key = _getch();
+
+#ifdef _WIN32
+        if (key == 224) {
+            int arrow = _getch();
+            if (arrow == 72) {
+                currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+            } else if (arrow == 80) {
+                currentSelection = (currentSelection + 1) % menuSize;
+            }
+        } else if (key == 13) {
+            break;
+        }
+#else
+        if (key == 27) {
+            int second = _getch();
+            if (second == 91) {
+                int arrow = _getch();
+                if (arrow == 65) {
+                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
+                } else if (arrow == 66) {
+                    currentSelection = (currentSelection + 1) % menuSize;
+                }
+            }
+        } else if (key == 10) {
+            break;
+        }
+#endif
+    }
+}
+
+bool isCSVKosong(const string &filename) {
+    try {
+        ifstream file(filename);
+        if (!file.is_open()) {
+            return true;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            line.erase(0, line.find_first_not_of(" \t\r\n"));
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);
+            if (!line.empty()) {
+                return false;
+            }
+        }
+        return true;
+    } catch (const exception& e) {
+        cout << "Error checking CSV: " << e.what() << "\n";
+        return true;
+    }
+}
+
 void tambahMotor(const string &filename) {
     try {
         ofstream data(filename, ios::app);
@@ -179,28 +290,6 @@ void tabelAntrean(const string &filename) {
         cout << "+----+----------------------+------------+--------------+---------------+-----------------+---------------+\n";
     } catch (const exception& e) {
         cout << "Error membaca antrean: " << e.what() << "\n";
-    }
-}
-
-bool isCSVKosong(const string &filename) {
-    try {
-        ifstream file(filename);
-        if (!file.is_open()) {
-            return true;
-        }
-
-        string line;
-        while (getline(file, line)) {
-            line.erase(0, line.find_first_not_of(" \t\r\n"));
-            line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (!line.empty()) {
-                return false;
-            }
-        }
-        return true;
-    } catch (const exception& e) {
-        cout << "Error checking CSV: " << e.what() << "\n";
-        return true;
     }
 }
 
@@ -399,95 +488,6 @@ void hapusDataMotor(const string &filename, int rowToDelete) {
     } catch (const exception& e) {
         cout << "Error menghapus data motor: " << e.what() << "\n";
     }
-}
-
-const char *menuItems[] = {
-    "1. Tambah Motor",
-    "2. Lihat Antrean",
-    "3. Servis Motor",
-    "4. Hapus Motor",
-    "0. Keluar"};
-
-const int menuSize = sizeof(menuItems) / sizeof(menuItems[0]);
-int currentSelection = 0;
-
-#ifdef _WIN32
-void clearScreen() {
-    system("cls");
-}
-#else
-int _getch() {
-    struct termios oldt, newt;
-    int ch;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return ch;
-}
-
-void clearScreen() {
-    system("clear");
-}
-#endif
-
-void displayMenu() {
-    clearScreen();
-    cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
-    for (int i = 0; i < menuSize; i++) {
-        if (i == currentSelection)
-            cout << " -> " << menuItems[i] << "\n";
-        else
-            cout << "     " << menuItems[i] << "\n";
-    }
-}
-
-void handleInput() {
-    while (true) {
-        displayMenu();
-        int key = _getch();
-
-#ifdef _WIN32
-        if (key == 224) {
-            int arrow = _getch();
-            if (arrow == 72) {
-                currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-            } else if (arrow == 80) {
-                currentSelection = (currentSelection + 1) % menuSize;
-            }
-        } else if (key == 13) {
-            break;
-        }
-#else
-        if (key == 27) {
-            int second = _getch();
-            if (second == 91) {
-                int arrow = _getch();
-                if (arrow == 65) {
-                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-                } else if (arrow == 66) {
-                    currentSelection = (currentSelection + 1) % menuSize;
-                }
-            }
-        } else if (key == 10) {
-            break;
-        }
-#endif
-    }
-}
-
-string tanggalMasuk() {
-    time_t now = time(0);
-    tm *ltm = localtime(&now);
-    char buffer[11];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d", ltm);
-    return string(buffer);
-}
-
-bool AdaDalamTeks(const string &teks, char yangDicari) {
-    return teks.find(yangDicari) != string::npos;
 }
 
 int menu_pegawai() {
