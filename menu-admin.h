@@ -36,11 +36,15 @@ struct Akun {
     string role; // "admin" or "pegawai"
 };
 
+// Deklarasi fungsi
 void tampilkan_antrean();
 void tampilkan_laporan();
 void rekrutPegawai();
 void pecatPegawai();
 void daftarPegawai();
+void handleInput(int &currentSelection, const char *menuItems[], int menuSize);
+void displayMenu(const char *menuItems[], int menuSize, int currentSelection);
+void clearTerminal();
 
 const char *adminMenuItems[] = {
     "1. Lihat Antrean",
@@ -63,6 +67,13 @@ const char *sortMenuItems[] = {
     "2. Z-A (descending)"
 };
 const int sortMenuSize = sizeof(sortMenuItems) / sizeof(sortMenuItems[0]);
+
+// Fungsi utilitas baru untuk menangani error
+void handle_error(const string& pesan, const exception& e) {
+    cout << pesan << ": " << e.what() << "\n";
+    cout << "Tekan enter untuk kembali\n";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
 
 #ifdef _WIN32
 void clearTerminal() {
@@ -91,6 +102,7 @@ void clearTerminal() {
 }
 #endif
 
+// Fungsi Buat Tampilan Pada Terminal
 void displayMenu(const char *menuItems[], int menuSize, int currentSelection) {
     clearTerminal();
     cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
@@ -102,10 +114,10 @@ void displayMenu(const char *menuItems[], int menuSize, int currentSelection) {
     }
 }
 
-void handleInput(int &currentSelection, int menuSize) {
+void handleInput(int &currentSelection, const char *menuItems[], int menuSize) {
     while (true) {
         try {
-            displayMenu(adminMenuItems, adminMenuSize, currentSelection);
+            displayMenu(menuItems, menuSize, currentSelection);
             int key = _getch();
 #ifdef _WIN32
             if (key == 224) {
@@ -134,100 +146,144 @@ void handleInput(int &currentSelection, int menuSize) {
             }
 #endif
         } catch (const exception& e) {
-            cout << "Error handling input: " << e.what() << "\n";
-            cout << "Tekan enter untuk kembali\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            handle_error("Error handling input", e);
             break;
         }
     }
 }
 
-void handleSubMenuInput(int &currentSelection, int menuSize) {
-    while (true) {
-        try {
-            displayMenu(subMenuItems, subMenuSize, currentSelection);
-            int key = _getch();
-#ifdef _WIN32
-            if (key == 224) {
-                int arrow = _getch();
-                if (arrow == 72) { // Up
-                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-                } else if (arrow == 80) { // Down
-                    currentSelection = (currentSelection + 1) % menuSize;
-                }
-            } else if (key == 13) { // Enter
-                break;
-            }
-#else
-            if (key == 27) {
-                int second = _getch();
-                if (second == 91) {
-                    int arrow = _getch();
-                    if (arrow == 65) { // Up
-                        currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-                    } else if (arrow == 66) { // Down
-                        currentSelection = (currentSelection + 1) % menuSize;
+// Fungsi utilitas untuk membaca data CSV
+vector<DataBengkel> baca_data_csv(const string& namaFile) {
+    vector<DataBengkel> data;
+    try {
+        ifstream file(namaFile);
+        if (!file.is_open()) {
+            throw runtime_error("Gagal membuka file " + namaFile + ". Pastikan file ada di direktori yang sama dengan program.");
+        }
+
+        string line;
+        bool hasData = false;
+        while (getline(file, line)) {
+            line.erase(0, line.find_first_not_of(" \t\r\n"));
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);
+            if (line.empty()) continue;
+            stringstream ss(line);
+            DataBengkel bengkel;
+            getline(ss, bengkel.namaMotor, ',');
+            if (bengkel.namaMotor.empty()) bengkel.namaMotor = "N/A";
+            getline(ss, bengkel.noPlat, ',');
+            if (bengkel.noPlat.empty()) bengkel.noPlat = "N/A";
+            getline(ss, bengkel.noHp, ',');
+            if (bengkel.noHp.empty()) bengkel.noHp = "N/A";
+            string lama_servis_str;
+            getline(ss, lama_servis_str, ',');
+            try {
+                if (!lama_servis_str.empty()) {
+                    bengkel.lama_servis = stoi(lama_servis_str);
+                    if (bengkel.lama_servis < 0) {
+                        throw out_of_range("Lama servis tidak boleh negatif.");
                     }
+                } else {
+                    bengkel.lama_servis = 0;
                 }
-            } else if (key == 10) { // Enter
-                break;
+            } catch (const invalid_argument&) {
+                bengkel.lama_servis = 0;
+            } catch (const out_of_range&) {
+                bengkel.lama_servis = 0;
             }
-#endif
-        } catch (const exception& e) {
-            cout << "Error handling submenu input: " << e.what() << "\n";
-            cout << "Tekan enter untuk kembali\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            break;
+            getline(ss, bengkel.statusServis, ',');
+            if (bengkel.statusServis.empty()) bengkel.statusServis = "N/A";
+            getline(ss, bengkel.tglMasuk, ',');
+            if (bengkel.tglMasuk.empty()) bengkel.tglMasuk = "N/A";
+            data.push_back(bengkel);
+            hasData = true;
         }
+        file.close();
+        if (!hasData) {
+            cout << "Data kosong.\n";
+        }
+    } catch (const exception& e) {
+        handle_error("Error membaca data", e);
+    }
+    return data;
+}
+
+vector<Akun> baca_akun_csv(const string& namaFile) {
+    vector<Akun> akunList;
+    try {
+        ifstream file(namaFile);
+        if (!file.is_open()) {
+            throw runtime_error("Gagal membuka file " + namaFile + ".");
+        }
+        string line;
+        while (getline(file, line)) {
+            line.erase(0, line.find_first_not_of(" \t\r\n"));
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);
+            if (line.empty()) continue;
+            stringstream ss(line);
+            Akun akun;
+            if (!getline(ss, akun.username, ',')) continue;
+            if (!getline(ss, akun.password, ',')) continue;
+            if (!getline(ss, akun.role)) continue;
+            akunList.push_back(akun);
+        }
+        file.close();
+    } catch (const exception& e) {
+        handle_error("Error membaca file akun", e);
+    }
+    return akunList;
+}
+
+// Fungsi utilitas untuk menulis akun ke CSV
+void tulis_akun_csv(const string& namaFile, const vector<Akun>& akunList) {
+    try {
+        ofstream outFile(namaFile);
+        if (!outFile.is_open()) {
+            throw runtime_error("Gagal membuka file " + namaFile + " untuk menulis.");
+        }
+        for (const auto& a : akunList) {
+            outFile << a.username << "," << a.password << "," << a.role << "\n";
+        }
+        outFile.close();
+    } catch (const exception& e) {
+        handle_error("Error menulis file akun", e);
     }
 }
 
-void handleSortMenuInput(int &currentSelection, int menuSize) {
-    while (true) {
-        try {
-            displayMenu(sortMenuItems, sortMenuSize, currentSelection);
-            int key = _getch();
-#ifdef _WIN32
-            if (key == 224) {
-                int arrow = _getch();
-                if (arrow == 72) { // Up
-                    currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-                } else if (arrow == 80) { // Down
-                    currentSelection = (currentSelection + 1) % menuSize;
-                }
-            } else if (key == 13) { // Enter
-                break;
-            }
-#else
-            if (key == 27) {
-                int second = _getch();
-                if (second == 91) {
-                    int arrow = _getch();
-                    if (arrow == 65) { // Up
-                        currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-                    } else if (arrow == 66) { // Down
-                        currentSelection = (currentSelection + 1) % menuSize;
-                    }
-                }
-            } else if (key == 10) { // Enter
-                break;
-            }
-#endif
-        } catch (const exception& e) {
-            cout << "Error handling sort menu input: " << e.what() << "\n";
-            cout << "Tekan enter untuk kembali\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            break;
-        }
+// Fungsi utilitas untuk menampilkan tabel
+void tampilkan_data_csv(const string& namaFile, const string& judul, int lebarLamaServis) {
+    vector<DataBengkel> data = baca_data_csv(namaFile);
+    if (data.empty()) {
+        cout << judul << " kosong.\n";
+        return;
     }
+
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
+    cout << "| No |      Nama Motor      | Plat Nomor |    No HP     | Lama Servis | Status Servis | Tanggal Masuk |\n";
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
+
+    int rowNumber = 1;
+    for (const auto& m : data) {
+        cout << "| " << setw(3) << left << rowNumber;
+        cout << "| " << setw(21) << left << (m.namaMotor.empty() ? "N/A" : m.namaMotor);
+        cout << "| " << setw(11) << left << (m.noPlat.empty() ? "N/A" : m.noPlat);
+        cout << "| " << setw(13) << left << (m.noHp.empty() ? "N/A" : m.noHp);
+        cout << "| " << setw(lebarLamaServis) << left << (m.lama_servis ? to_string(m.lama_servis) + " jam" : "N/A");
+        cout << "| " << setw(14) << left << (m.statusServis.empty() ? "N/A" : m.statusServis);
+        cout << "| " << setw(14) << left << (m.tglMasuk.empty() ? "N/A" : m.tglMasuk);
+        cout << "|\n";
+        rowNumber++;
+    }
+    cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
 }
 
+// Crud Admin
 void menu_admin() {
     int pilihan;
     int currentSelection = 0;
     do {
         try {
-            handleInput(currentSelection, adminMenuSize);
+            handleInput(currentSelection, adminMenuItems, adminMenuSize);
             pilihan = currentSelection;
             clearTerminal();
 
@@ -246,7 +302,7 @@ void menu_admin() {
                     int subPilihan;
                     int subCurrentSelection = 0;
                     do {
-                        handleSubMenuInput(subCurrentSelection, subMenuSize);
+                        handleInput(subCurrentSelection, subMenuItems, subMenuSize);
                         subPilihan = subCurrentSelection;
                         clearTerminal();
 
@@ -285,235 +341,43 @@ void menu_admin() {
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
             }
         } catch (const exception& e) {
-            cout << "Error in menu_admin: " << e.what() << "\n";
-            cout << "Tekan enter untuk kembali\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            handle_error("Error in menu_admin", e);
         }
     } while (pilihan != 3);
 }
 
 void tampilkan_antrean() {
-    try {
-        ifstream file("bengkel.csv");
-        if (!file.is_open()) {
-            throw runtime_error("Gagal membuka file bengkel.csv. Pastikan file ada di direktori yang sama dengan program.");
-        }
-
-        vector<DataBengkel> antrean;
-        string line;
-        bool hasData = false;
-        while (getline(file, line)) {
-            line.erase(0, line.find_first_not_of(" \t\r\n"));
-            line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (line.empty()) {
-                continue;
-            }
-            stringstream ss(line);
-            DataBengkel bengkel;
-            getline(ss, bengkel.namaMotor, ',');
-            if (bengkel.namaMotor.empty()) {
-                bengkel.namaMotor = "N/A";
-            }
-            getline(ss, bengkel.noPlat, ',');
-            if (bengkel.noPlat.empty()) {
-                bengkel.noPlat = "N/A";
-            }
-            getline(ss, bengkel.noHp, ',');
-            if (bengkel.noHp.empty()) {
-                bengkel.noHp = "N/A";
-            }
-            string lama_servis_str;
-            getline(ss, lama_servis_str, ',');
-            try {
-                if (!lama_servis_str.empty()) {
-                    bengkel.lama_servis = stoi(lama_servis_str);
-                    if (bengkel.lama_servis < 0) {
-                        throw out_of_range("Lama servis tidak boleh negatif.");
-                    }
-                } else {
-                    bengkel.lama_servis = 0;
-                }
-            } catch (const invalid_argument&) {
-                bengkel.lama_servis = 0;
-            } catch (const out_of_range&) {
-                bengkel.lama_servis = 0;
-            }
-            getline(ss, bengkel.statusServis, ',');
-            if (bengkel.statusServis.empty()) {
-                bengkel.statusServis = "N/A";
-            }
-            getline(ss, bengkel.tglMasuk, ',');
-            if (bengkel.tglMasuk.empty()) {
-                bengkel.tglMasuk = "N/A";
-            }
-            antrean.push_back(bengkel);
-            hasData = true;
-        }
-        file.close();
-
-        if (!hasData) {
-            cout << "Antrean kosong.\n";
-            return;
-        }
-
-        cout << "+----+----------------------+------------+--------------+---------------+-----------------+---------------+\n";
-        cout << "| No |      Nama Motor      | Plat Nomor |    No HP     |  Lama Servis  |  Status Servis  | Tanggal Masuk |\n";
-        cout << "+----+----------------------+------------+--------------+---------------+-----------------+---------------+\n";
-
-        int rowNumber = 1;
-        for (const auto& m : antrean) {
-            cout << "| " << setw(3) << left << rowNumber;
-            cout << "| " << setw(21) << left << (m.namaMotor.empty() ? "N/A" : m.namaMotor);
-            cout << "| " << setw(11) << left << (m.noPlat.empty() ? "N/A" : m.noPlat);
-            cout << "| " << setw(13) << left << (m.noHp.empty() ? "N/A" : m.noHp);
-            cout << "| " << setw(14) << left << (m.lama_servis ? to_string(m.lama_servis) + " jam" : "N/A");
-            cout << "| " << setw(16) << left << (m.statusServis.empty() ? "N/A" : m.statusServis);
-            cout << "| " << setw(14) << left << (m.tglMasuk.empty() ? "N/A" : m.tglMasuk);
-            cout << "|\n";
-            rowNumber++;
-        }
-        cout << "+----+----------------------+------------+--------------+---------------+-----------------+---------------+\n";
-    } catch (const exception& e) {
-        cout << "Error membaca antrean: " << e.what() << "\n";
-    }
+    tampilkan_data_csv("bengkel.csv", "Antrean", 12);
 }
 
 void tampilkan_laporan() {
-    try {
-        ifstream file("laporan.csv");
-        if (!file.is_open()) {
-            throw runtime_error("Gagal membuka file laporan.csv. Pastikan file ada di direktori yang sama dengan program.");
-        }
-
-        vector<DataBengkel> laporan;
-        string line;
-        bool hasData = false;
-        while (getline(file, line)) {
-            line.erase(0, line.find_first_not_of(" \t\r\n"));
-            line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (line.empty()) {
-                continue;
-            }
-            stringstream ss(line);
-            DataBengkel bengkel;
-            getline(ss, bengkel.namaMotor, ',');
-            if (bengkel.namaMotor.empty()) {
-                bengkel.namaMotor = "N/A";
-            }
-            getline(ss, bengkel.noPlat, ',');
-            if (bengkel.noPlat.empty()) {
-                bengkel.noPlat = "N/A";
-            }
-            getline(ss, bengkel.noHp, ',');
-            if (bengkel.noHp.empty()) {
-                bengkel.noHp = "N/A";
-            }
-            string lama_servis_str;
-            getline(ss, lama_servis_str, ',');
-            try {
-                if (!lama_servis_str.empty()) {
-                    bengkel.lama_servis = stoi(lama_servis_str);
-                    if (bengkel.lama_servis < 0) {
-                        throw out_of_range("Lama servis tidak boleh negatif.");
-                    }
-                } else {
-                    bengkel.lama_servis = 0;
-                }
-            } catch (const invalid_argument&) {
-                bengkel.lama_servis = 0;
-            } catch (const out_of_range&) {
-                bengkel.lama_servis = 0;
-            }
-            getline(ss, bengkel.statusServis, ',');
-            if (bengkel.statusServis.empty()) {
-                bengkel.statusServis = "N/A";
-            }
-            getline(ss, bengkel.tglMasuk, ',');
-            if (bengkel.tglMasuk.empty()) {
-                bengkel.tglMasuk = "N/A";
-            }
-            laporan.push_back(bengkel);
-            hasData = true;
-        }
-        file.close();
-
-        if (!hasData) {
-            cout << "Laporan kosong.\n";
-            return;
-        }
-
-        cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
-        cout << "| No |      Nama Motor      | Plat Nomor |    No HP     | Lama Servis | Status Servis | Tanggal Masuk |\n";
-        cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
-
-        int rowNumber = 1;
-        for (const auto& m : laporan) {
-            cout << "| " << setw(3) << left << rowNumber;
-            cout << "| " << setw(21) << left << (m.namaMotor.empty() ? "N/A" : m.namaMotor);
-            cout << "| " << setw(11) << left << (m.noPlat.empty() ? "N/A" : m.noPlat);
-            cout << "| " << setw(13) << left << (m.noHp.empty() ? "N/A" : m.noHp);
-            cout << "| " << setw(12) << left << (m.lama_servis ? to_string(m.lama_servis) + " jam" : "N/A");
-            cout << "| " << setw(14) << left << (m.statusServis.empty() ? "N/A" : m.statusServis);
-            cout << "| " << setw(14) << left << (m.tglMasuk.empty() ? "N/A" : m.tglMasuk);
-            cout << "|\n";
-            rowNumber++;
-        }
-        cout << "+----+----------------------+------------+--------------+-------------+---------------+---------------+\n";
-    } catch (const exception& e) {
-        cout << "Error membaca laporan: " << e.what() << "\n";
-    }
+    tampilkan_data_csv("laporan.csv", "Laporan", 12);
 }
 
 void rekrutPegawai() {
     try {
         Akun akun;
         cout << "\nMasukkan username baru: ";
-        if (!getline(cin, akun.username)) {
-            throw runtime_error("Gagal membaca username.");
-        }
-        if (akun.username.empty() || akun.username.find(',') != string::npos) {
+        if (!getline(cin, akun.username) || akun.username.empty() || akun.username.find(',') != string::npos) {
             throw runtime_error("Username tidak boleh kosong atau mengandung koma.");
         }
         cout << "Masukkan password baru: ";
-        if (!getline(cin, akun.password)) {
-            throw runtime_error("Gagal membaca password.");
-        }
-        if (akun.password.empty() || akun.password.find(',') != string::npos) {
+        if (!getline(cin, akun.password) || akun.password.empty() || akun.password.find(',') != string::npos) {
             throw runtime_error("Password tidak boleh kosong atau mengandung koma.");
         }
         akun.role = "pegawai";
 
-        ifstream file("akun.csv");
-        if (!file.is_open()) {
-            throw runtime_error("Gagal membuka file akun.csv untuk membaca.");
-        }
-
-        string line;
-        bool usernameExists = false;
-        while (getline(file, line)) {
-            stringstream ss(line);
-            string existingUsername;
-            if (!getline(ss, existingUsername, ',')) continue;
-            if (existingUsername == akun.username) {
-                usernameExists = true;
-                break;
+        vector<Akun> akunList = baca_akun_csv("akun.csv");
+        for (const auto& a : akunList) {
+            if (a.username == akun.username) {
+                throw runtime_error("Username sudah digunakan. Silakan coba username lain.");
             }
         }
-        file.close();
-
-        if (usernameExists) {
-            throw runtime_error("Username sudah digunakan. Silakan coba username lain.");
-        }
-
-        ofstream outFile("akun.csv", ios::app);
-        if (!outFile.is_open()) {
-            throw runtime_error("Gagal membuka file akun.csv untuk menulis.");
-        }
-        outFile << akun.username << "," << akun.password << "," << akun.role << "\n";
-        outFile.close();
+        akunList.push_back(akun);
+        tulis_akun_csv("akun.csv", akunList);
         cout << "Pegawai berhasil direkrut.\n";
     } catch (const exception& e) {
-        cout << "Error merekrut pegawai: " << e.what() << "\n";
+        handle_error("Error merekrut pegawai", e);
     }
 }
 
@@ -525,27 +389,11 @@ void pecatPegawai() {
             throw runtime_error("Gagal membaca kata kunci.");
         }
 
-        ifstream file("akun.csv");
-        if (!file.is_open()) {
-            throw runtime_error("Gagal membuka file akun.csv atau belum ada data.");
-        }
-
-        vector<Akun> akunList;
+        vector<Akun> akunList = baca_akun_csv("akun.csv");
         vector<Akun> filteredList;
-        string line;
         bool hasData = false;
-        while (getline(file, line)) {
-            line.erase(0, line.find_first_not_of(" \t\r\n"));
-            line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (line.empty()) continue;
-            stringstream ss(line);
-            Akun akun;
-            if (!getline(ss, akun.username, ',')) continue;
-            if (!getline(ss, akun.password, ',')) continue;
-            if (!getline(ss, akun.role)) continue;
+        for (const auto& akun : akunList) {
             if (akun.role == "pegawai") {
-                akunList.push_back(akun);
-                // Case-insensitive search
                 string usernameLower = akun.username;
                 string keywordLower = keyword;
                 transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
@@ -554,18 +402,14 @@ void pecatPegawai() {
                     filteredList.push_back(akun);
                     hasData = true;
                 }
-            } else {
-                akunList.push_back(akun);
             }
         }
-        file.close();
 
         if (!hasData) {
             cout << "Tidak ada pegawai yang cocok dengan kata kunci '" << keyword << "'.\n";
             return;
         }
 
-        // Tampilkan hasil pencarian
         cout << "\nHasil pencarian:\n";
         cout << "+----+----------------------+---------------+\n";
         cout << "| No |      Username        |     Role      |\n";
@@ -580,7 +424,6 @@ void pecatPegawai() {
         }
         cout << "+----+----------------------+---------------+\n";
 
-        // Pilih pegawai untuk dipecat
         cout << "Masukkan nomor pegawai yang akan dipecat (1-" << filteredList.size() << "): ";
         string input;
         if (!getline(cin, input)) {
@@ -596,7 +439,6 @@ void pecatPegawai() {
             throw runtime_error("Nomor pilihan tidak valid.");
         }
 
-        // Konfirmasi pemecatan
         string usernameToDelete = filteredList[choice - 1].username;
         cout << "Apakah Anda yakin ingin memecat pegawai dengan username '" << usernameToDelete << "'? (y/n): ";
         char confirm;
@@ -607,77 +449,43 @@ void pecatPegawai() {
             return;
         }
 
-        // Hapus pegawai dari akunList
         akunList.erase(
             remove_if(akunList.begin(), akunList.end(),
                 [&usernameToDelete](const Akun& a) { return a.username == usernameToDelete && a.role == "pegawai"; }),
             akunList.end()
         );
 
-        // Tulis kembali ke file
-        ofstream outFile("akun.csv");
-        if (!outFile.is_open()) {
-            throw runtime_error("Gagal membuka file akun.csv untuk menulis.");
-        }
-        for (const auto& a : akunList) {
-            outFile << a.username << "," << a.password << "," << a.role << "\n";
-        }
-        outFile.close();
+        tulis_akun_csv("akun.csv", akunList);
         cout << "Pegawai dengan username '" << usernameToDelete << "' berhasil dipecat.\n";
     } catch (const exception& e) {
-        cout << "Error memecat pegawai: " << e.what() << "\n";
+        handle_error("Error memecat pegawai", e);
     }
 }
 
 void daftarPegawai() {
     try {
-        ifstream file("akun.csv");
-        if (!file.is_open()) {
-            throw runtime_error("Gagal membuka file akun.csv atau belum ada data.");
-        }
-
-        vector<Akun> akunList;
-        Akun akun;
-        string line;
+        vector<Akun> akunList = baca_akun_csv("akun.csv");
+        vector<Akun> pegawaiList;
         bool hasData = false;
-        while (getline(file, line)) {
-            line.erase(0, line.find_first_not_of(" \t\r\n"));
-            line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (line.empty()) {
-                continue;
-            }
-            stringstream ss(line);
-            if (!getline(ss, akun.username, ',')) {
-                continue;
-            }
-            if (!getline(ss, akun.password, ',')) {
-                continue;
-            }
-            if (!getline(ss, akun.role)) {
-                continue;
-            }
+        for (const auto& akun : akunList) {
             if (akun.role == "pegawai") {
-                akunList.push_back(akun);
+                pegawaiList.push_back(akun);
                 hasData = true;
             }
         }
-        file.close();
 
         if (!hasData) {
             cout << "Belum ada pegawai terdaftar.\n";
             return;
         }
 
-        // Pilih urutan pengurutan dengan menu arrow
         cout << "\nPilih urutan pengurutan:\n";
         int sortSelection = 0;
-        handleSortMenuInput(sortSelection, sortMenuSize);
-        int sortChoice = sortSelection + 1; // Adjust to match original 1-based indexing
+        handleInput(sortSelection, sortMenuItems, sortMenuSize);
+        int sortChoice = sortSelection + 1;
 
-        // Urutkan akunList berdasarkan pilihan
         if (sortChoice == 1) {
-            // A-Z (ascending)
-            sort(akunList.begin(), akunList.end(),
+            sort(pegawaiList.begin(), pegawaiList.end(),
                  [](const Akun& a, const Akun& b) {
                      string usernameA = a.username;
                      string usernameB = b.username;
@@ -686,8 +494,7 @@ void daftarPegawai() {
                      return usernameA < usernameB;
                  });
         } else if (sortChoice == 2) {
-            // Z-A (descending)
-            sort(akunList.begin(), akunList.end(),
+            sort(pegawaiList.begin(), pegawaiList.end(),
                  [](const Akun& a, const Akun& b) {
                      string usernameA = a.username;
                      string usernameB = b.username;
@@ -704,7 +511,7 @@ void daftarPegawai() {
         cout << "+----+----------------------+---------------+\n";
 
         int rowNumber = 1;
-        for (const auto& a : akunList) {
+        for (const auto& a : pegawaiList) {
             cout << "| " << setw(3) << left << rowNumber;
             cout << "| " << setw(21) << left << (a.username.empty() ? "N/A" : a.username);
             cout << "| " << setw(14) << left << (a.role.empty() ? "N/A" : a.role);
@@ -713,6 +520,6 @@ void daftarPegawai() {
         }
         cout << "+----+----------------------+---------------+\n";
     } catch (const exception& e) {
-        cout << "Error menampilkan daftar pegawai: " << e.what() << "\n";
+        handle_error("Error menampilkan daftar pegawai", e);
     }
 }
