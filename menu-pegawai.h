@@ -19,7 +19,8 @@
 
 using namespace std;
 
-struct PaketServis {
+struct PaketServis
+{
     int id;
     string namaPaket;
     int lamaServis;
@@ -39,32 +40,26 @@ const int menuSize = sizeof(menuItems) / sizeof(menuItems[0]);
 int currentSelection = 0;
 
 #ifdef _WIN32
-void clearScreen() {
+void clearScreen()
+{
     system("cls");
 }
 #else
-int _getch() {
-    struct termios oldt, newt;
-    int ch;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return ch;
-}
+extern int _getch();
 
-void clearScreen() {
+void clearScreen()
+{
     system("clear");
 }
 #endif
 
-bool AdaDalamTeks(const string &teks, char yangDicari) {
+bool AdaDalamTeks(const string &teks, char yangDicari)
+{
     return teks.find(yangDicari) != string::npos;
 }
 
-string tanggalMasuk() {
+string tanggalMasuk()
+{
     time_t now = time(0);
     tm *ltm = localtime(&now);
     char buffer[11];
@@ -72,10 +67,12 @@ string tanggalMasuk() {
     return string(buffer);
 }
 
-void displayMenu() {
+void displayMenu()
+{
     clearScreen();
     cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
-    for (int i = 0; i < menuSize; i++) {
+    for (int i = 0; i < menuSize; i++)
+    {
         if (i == currentSelection)
             cout << " -> " << menuItems[i] << "\n";
         else
@@ -83,66 +80,91 @@ void displayMenu() {
     }
 }
 
-void handleInput() {
-    while (true) {
+void handleInput()
+{
+    while (true)
+    {
         displayMenu();
         int key = _getch();
 
 #ifdef _WIN32
-        if (key == 224) {
+        if (key == 224)
+        {
             int arrow = _getch();
-            if (arrow == 72) {
+            if (arrow == 72)
+            {
                 currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-            } else if (arrow == 80) {
+            }
+            else if (arrow == 80)
+            {
                 currentSelection = (currentSelection + 1) % menuSize;
             }
-        } else if (key == 13) {
+        }
+        else if (key == 13)
+        {
             break;
         }
 #else
-        if (key == 27) {
+        if (key == 27)
+        {
             int second = _getch();
-            if (second == 91) {
+            if (second == 91)
+            {
                 int arrow = _getch();
-                if (arrow == 65) {
+                if (arrow == 65)
+                {
                     currentSelection = (currentSelection - 1 + menuSize) % menuSize;
-                } else if (arrow == 66) {
+                }
+                else if (arrow == 66)
+                {
                     currentSelection = (currentSelection + 1) % menuSize;
                 }
             }
-        } else if (key == 10) {
+        }
+        else if (key == 10)
+        {
             break;
         }
 #endif
     }
 }
 
-bool isCSVKosong(const string &filename) {
-    try {
+bool isCSVKosong(const string &filename)
+{
+    try
+    {
         ifstream file(filename);
-        if (!file.is_open()) {
+        if (!file.is_open())
+        {
             return true;
         }
 
         string line;
-        while (getline(file, line)) {
+        while (getline(file, line))
+        {
             line.erase(0, line.find_first_not_of(" \t\r\n"));
             line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (!line.empty()) {
+            if (!line.empty())
+            {
                 return false;
             }
         }
         return true;
-    } catch (const exception& e) {
+    }
+    catch (const exception &e)
+    {
         cout << "Error checking CSV: " << e.what() << "\n";
         return true;
     }
 }
 
-void tambahMotor(const string &filename) {
-    try {
+void tambahMotor(const string &filename)
+{
+    try
+    {
         ofstream data(filename, ios::app);
-        if (!data.is_open()) {
+        if (!data.is_open())
+        {
             throw runtime_error("Gagal membuka file: " + filename);
         }
 
@@ -153,41 +175,80 @@ void tambahMotor(const string &filename) {
 
         DataBengkel motor;
         cout << "Masukkan nama motor: ";
-        if (!getline(cin, motor.namaMotor)) {
+        if (!getline(cin, motor.namaMotor))
+        {
             throw runtime_error("Gagal membaca nama motor.");
         }
-        if (motor.namaMotor.empty() || motor.namaMotor.find(',') != string::npos) {
+        if (motor.namaMotor.empty() || motor.namaMotor.find(',') != string::npos)
+        {
             throw runtime_error("Nama motor tidak boleh kosong atau mengandung koma.");
         }
         cout << "Masukkan nomor plat motor: ";
-        if (!getline(cin, motor.noPlat)) {
+        if (!getline(cin, motor.noPlat))
+        {
             throw runtime_error("Gagal membaca nomor plat.");
         }
-        if (motor.noPlat.empty() || motor.noPlat.find(',') != string::npos) {
+        if (motor.noPlat.empty() || motor.noPlat.find(',') != string::npos)
+        {
             throw runtime_error("Nomor plat tidak boleh kosong atau mengandung koma.");
         }
         cout << "Masukkan nomor hp: ";
-        if (!getline(cin, motor.noHp)) {
+        if (!getline(cin, motor.noHp))
+        {
             throw runtime_error("Gagal membaca nomor HP.");
         }
-        if (motor.noHp.empty() || motor.noHp.find(',') != string::npos) {
+        if (motor.noHp.empty() || motor.noHp.find(',') != string::npos)
+        {
+            throw runtime_error("Nomor HP tidak boleh kosong atau mengandung koma.");
+        }
+        for (char c : motor.noHp)
+        {
+            if (!isdigit(c))
+            {
+                throw runtime_error("Nomor HP hanya boleh terdiri dari angka.");
+            }
+        }
+        if (motor.noHp.empty() || motor.noHp.find(',') != string::npos)
+        {
             throw runtime_error("Nomor HP tidak boleh kosong atau mengandung koma.");
         }
 
         cout << "Paket Servis Bengkel Mas Tahir\n";
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 3; ++i)
+        {
             cout << paket[i].id << ". " << paket[i].namaPaket << endl;
         }
 
+        string input;
         int pilihPaket;
         cout << "Pilih paket (1-3): ";
-        cin >> pilihPaket;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getline(cin, input);
 
-        if (pilihPaket >= 1 && pilihPaket <= 3) {
+        // cek kosong
+        if (input.empty())
+        {
+            throw runtime_error("Input tidak boleh kosong.");
+        }
+
+        // cek semua karakter harus digit
+        for (char c : input)
+        {
+            if (!isdigit(c))
+            {
+                throw runtime_error("Input harus berupa angka.");
+            }
+        }
+
+        // konversi ke int
+        pilihPaket = stoi(input);
+
+        if (pilihPaket >= 1 && pilihPaket <= 3)
+        {
             motor.lama_servis = paket[pilihPaket - 1].lamaServis;
             motor.statusServis = "Menunggu";
-        } else {
+        }
+        else
+        {
             throw runtime_error("Pilihan paket tidak valid!");
         }
 
@@ -202,63 +263,85 @@ void tambahMotor(const string &filename) {
 
         data.close();
         cout << "Data motor berhasil ditambahkan.\n";
-    } catch (const exception& e) {
-        cout << "Error menambah motor: " << e.what() << "\n";
+    }
+    catch (const exception &e)
+    {
+        cout << "Error menambah motor: " << e.what() << "\n\n";
+        tambahMotor("bengkel.csv");
     }
 }
 
-void tabelAntrean(const string &filename) {
-    try {
+void tabelAntrean(const string &filename)
+{
+    try
+    {
         ifstream file(filename);
-        if (!file.is_open()) {
+        if (!file.is_open())
+        {
             throw runtime_error("Gagal membuka file: " + filename);
         }
 
         vector<DataBengkel> antrean;
         string line;
         bool hasData = false;
-        while (getline(file, line)) {
+        while (getline(file, line))
+        {
             line.erase(0, line.find_first_not_of(" \t\r\n"));
             line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (line.empty()) {
+            if (line.empty())
+            {
                 continue;
             }
             stringstream ss(line);
             DataBengkel bengkel;
             getline(ss, bengkel.namaMotor, ',');
-            if (bengkel.namaMotor.empty()) {
+            if (bengkel.namaMotor.empty())
+            {
                 bengkel.namaMotor = "N/A";
             }
             getline(ss, bengkel.noPlat, ',');
-            if (bengkel.noPlat.empty()) {
+            if (bengkel.noPlat.empty())
+            {
                 bengkel.noPlat = "N/A";
             }
             getline(ss, bengkel.noHp, ',');
-            if (bengkel.noHp.empty()) {
+            if (bengkel.noHp.empty())
+            {
                 bengkel.noHp = "N/A";
             }
             string lama_servis_str;
             getline(ss, lama_servis_str, ',');
-            try {
-                if (!lama_servis_str.empty()) {
+            try
+            {
+                if (!lama_servis_str.empty())
+                {
                     bengkel.lama_servis = stoi(lama_servis_str);
-                    if (bengkel.lama_servis < 0) {
+                    if (bengkel.lama_servis < 0)
+                    {
                         throw out_of_range("Lama servis tidak boleh negatif.");
                     }
-                } else {
+                }
+                else
+                {
                     bengkel.lama_servis = 0;
                 }
-            } catch (const invalid_argument&) {
+            }
+            catch (const invalid_argument &)
+            {
                 bengkel.lama_servis = 0;
-            } catch (const out_of_range&) {
+            }
+            catch (const out_of_range &)
+            {
                 bengkel.lama_servis = 0;
             }
             getline(ss, bengkel.statusServis, ',');
-            if (bengkel.statusServis.empty()) {
+            if (bengkel.statusServis.empty())
+            {
                 bengkel.statusServis = "N/A";
             }
             getline(ss, bengkel.tglMasuk, ',');
-            if (bengkel.tglMasuk.empty()) {
+            if (bengkel.tglMasuk.empty())
+            {
                 bengkel.tglMasuk = "N/A";
             }
             antrean.push_back(bengkel);
@@ -266,7 +349,8 @@ void tabelAntrean(const string &filename) {
         }
         file.close();
 
-        if (!hasData) {
+        if (!hasData)
+        {
             cout << "Antrean kosong.\n";
             return;
         }
@@ -276,7 +360,8 @@ void tabelAntrean(const string &filename) {
         cout << "+----+----------------------+------------+--------------+---------------+-----------------+---------------+\n";
 
         int rowNumber = 1;
-        for (const auto& m : antrean) {
+        for (const auto &m : antrean)
+        {
             cout << "| " << setw(3) << left << rowNumber;
             cout << "| " << setw(21) << left << (m.namaMotor.empty() ? "N/A" : m.namaMotor);
             cout << "| " << setw(11) << left << (m.noPlat.empty() ? "N/A" : m.noPlat);
@@ -288,46 +373,75 @@ void tabelAntrean(const string &filename) {
             rowNumber++;
         }
         cout << "+----+----------------------+------------+--------------+---------------+-----------------+---------------+\n";
-    } catch (const exception& e) {
+    }
+    catch (const exception &e)
+    {
         cout << "Error membaca antrean: " << e.what() << "\n";
     }
 }
 
-void servisMotor(const string &filename) {
-    try {
-        if (isCSVKosong(filename)) {
+void servisMotor(const string &filename)
+{
+    try
+    {
+        if (isCSVKosong(filename))
+        {
             system("clear || cls");
             cout << "Antrean kosong.\n";
             return;
         }
 
         string mulai;
-        do {
+        do
+        {
             system("clear || cls");
             tabelAntrean(filename);
 
-            cout << "Masukkan nomor antrean motor yang akan diservis (0 untuk kembali): ";
+            string input;
             int nomorAntrean;
-            cin >> nomorAntrean;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Masukkan nomor antrean motor yang akan diservis (0 untuk kembali): ";
+            getline(cin, input);
+            
+            
+            // cek kosong
+            if (input.empty())
+            {
+                throw runtime_error("Input tidak boleh kosong.");
+            }
 
-            if (nomorAntrean == 0) {
+            // cek semua karakter harus digit
+            for (char c : input)
+            {
+                if (!isdigit(c))
+                {
+                    throw runtime_error("Input harus berupa angka.");
+                }
+            }
+
+            // konversi ke int
+            nomorAntrean = stoi(input);
+
+            if (nomorAntrean == 0)
+            {
                 cout << "\nProses servis motor dihentikan.\n";
                 break;
             }
 
             // Read all entries from the file
             ifstream inFile(filename);
-            if (!inFile.is_open()) {
+            if (!inFile.is_open())
+            {
                 throw runtime_error("Gagal membuka file: " + filename);
             }
 
             vector<DataBengkel> antrean;
             string line;
-            while (getline(inFile, line)) {
+            while (getline(inFile, line))
+            {
                 line.erase(0, line.find_first_not_of(" \t\r\n"));
                 line.erase(line.find_last_not_of(" \t\r\n") + 1);
-                if (line.empty()) {
+                if (line.empty())
+                {
                     continue;
                 }
                 stringstream ss(line);
@@ -337,9 +451,12 @@ void servisMotor(const string &filename) {
                 getline(ss, bengkel.noHp, ',');
                 string lama_servis_str;
                 getline(ss, lama_servis_str, ',');
-                try {
+                try
+                {
                     bengkel.lama_servis = lama_servis_str.empty() ? 0 : stoi(lama_servis_str);
-                } catch (...) {
+                }
+                catch (...)
+                {
                     bengkel.lama_servis = 0;
                 }
                 getline(ss, bengkel.statusServis, ',');
@@ -348,11 +465,10 @@ void servisMotor(const string &filename) {
             }
             inFile.close();
 
-            if (nomorAntrean < 1 || nomorAntrean > antrean.size()) {
+            if (nomorAntrean < 1 || nomorAntrean > antrean.size())
+            {
                 system("clear || cls");
                 cout << "Nomor antrean tidak valid.\n";
-                cout << "Tekan enter untuk melanjutkan\n";
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 continue;
             }
 
@@ -366,10 +482,12 @@ void servisMotor(const string &filename) {
             antrean[nomorAntrean - 1] = bengkel;
 
             ofstream tempFile("temp.csv");
-            if (!tempFile.is_open()) {
+            if (!tempFile.is_open())
+            {
                 throw runtime_error("Gagal membuka file temp.csv.");
             }
-            for (const auto& b : antrean) {
+            for (const auto &b : antrean)
+            {
                 tempFile << b.namaMotor << "," << b.noPlat << "," << b.noHp << ","
                          << b.lama_servis << "," << b.statusServis << "," << b.tglMasuk << "\n";
             }
@@ -389,7 +507,8 @@ void servisMotor(const string &filename) {
             antrean[nomorAntrean - 1] = bengkel;
 
             ofstream laporanFile("laporan.csv", ios::app);
-            if (!laporanFile.is_open()) {
+            if (!laporanFile.is_open())
+            {
                 throw runtime_error("Gagal membuka file laporan.csv.");
             }
             laporanFile << bengkel.namaMotor << "," << bengkel.noPlat << "," << bengkel.noHp << ","
@@ -398,10 +517,12 @@ void servisMotor(const string &filename) {
 
             // Update bengkel.csv with "Selesai" status
             tempFile.open("temp.csv");
-            if (!tempFile.is_open()) {
+            if (!tempFile.is_open())
+            {
                 throw runtime_error("Gagal membuka file temp.csv.");
             }
-            for (const auto& b : antrean) {
+            for (const auto &b : antrean)
+            {
                 tempFile << b.namaMotor << "," << b.noPlat << "," << b.noHp << ","
                          << b.lama_servis << "," << b.statusServis << "," << b.tglMasuk << "\n";
             }
@@ -420,35 +541,44 @@ void servisMotor(const string &filename) {
 
             tabelAntrean(filename);
 
-            if (isCSVKosong(filename)) {
+            if (isCSVKosong(filename))
+            {
                 system("clear || cls");
                 cout << "Servis dihentikan, karena tidak ada antrean motor lagi\n";
                 break;
             }
 
             cout << "Lanjutkan servis motor lain (y/t)? : ";
-            if (!getline(cin, mulai)) {
+            if (!getline(cin, mulai))
+            {
                 throw runtime_error("Gagal membaca input.");
             }
         } while (mulai == "y" && !isCSVKosong(filename));
-    } catch (const exception& e) {
-        cout << "Error selama servis motor: " << e.what() << "\n";
+    }
+    catch (const exception &e)
+    {
+        cout << "Error selama servis motor: " << e.what() << "\n\n";
     }
 }
 
-void hapusDataMotor(const string &filename, int rowToDelete) {
-    try {
+void hapusDataMotor(const string &filename, int rowToDelete)
+{
+    try
+    {
         ifstream inFile(filename);
-        if (!inFile.is_open()) {
+        if (!inFile.is_open())
+        {
             throw runtime_error("Gagal membuka file: " + filename);
         }
 
         vector<DataBengkel> antrean;
         string line;
-        while (getline(inFile, line)) {
+        while (getline(inFile, line))
+        {
             line.erase(0, line.find_first_not_of(" \t\r\n"));
             line.erase(line.find_last_not_of(" \t\r\n") + 1);
-            if (line.empty()) {
+            if (line.empty())
+            {
                 continue;
             }
             stringstream ss(line);
@@ -458,9 +588,12 @@ void hapusDataMotor(const string &filename, int rowToDelete) {
             getline(ss, bengkel.noHp, ',');
             string lama_servis_str;
             getline(ss, lama_servis_str, ',');
-            try {
+            try
+            {
                 bengkel.lama_servis = lama_servis_str.empty() ? 0 : stoi(lama_servis_str);
-            } catch (...) {
+            }
+            catch (...)
+            {
                 bengkel.lama_servis = 0;
             }
             getline(ss, bengkel.statusServis, ',');
@@ -469,53 +602,95 @@ void hapusDataMotor(const string &filename, int rowToDelete) {
         }
         inFile.close();
 
-        if (rowToDelete < 0 || rowToDelete >= antrean.size()) {
+        if (rowToDelete < 0 || rowToDelete >= antrean.size())
+        {
             throw runtime_error("Nomor antrean tidak valid.");
         }
 
         antrean.erase(antrean.begin() + rowToDelete);
 
         ofstream outFile(filename);
-        if (!outFile.is_open()) {
+        if (!outFile.is_open())
+        {
             throw runtime_error("Gagal membuka file: " + filename);
         }
-        for (const auto& b : antrean) {
+        for (const auto &b : antrean)
+        {
             outFile << b.namaMotor << "," << b.noPlat << "," << b.noHp << ","
                     << b.lama_servis << "," << b.statusServis << "," << b.tglMasuk << "\n";
         }
         outFile.close();
         cout << "Data motor berhasil dihapus.\n";
-    } catch (const exception& e) {
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+    catch (const exception &e)
+    {
         cout << "Error menghapus data motor: " << e.what() << "\n";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
 
-int menu_pegawai() {
-    while (true) {
+int menu_pegawai()
+{
+    while (true)
+    {
         handleInput();
         clearScreen();
-        if (AdaDalamTeks(menuItems[currentSelection], '1')) {
+        if (AdaDalamTeks(menuItems[currentSelection], '1'))
+        {
             tambahMotor("bengkel.csv");
             cout << "Tekan enter untuk kembali\n";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        } else if (AdaDalamTeks(menuItems[currentSelection], '2')) {
+        }
+        else if (AdaDalamTeks(menuItems[currentSelection], '2'))
+        {
             tabelAntrean("bengkel.csv");
             cout << "Tekan enter untuk kembali\n";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        } else if (AdaDalamTeks(menuItems[currentSelection], '3')) {
+        }
+        else if (AdaDalamTeks(menuItems[currentSelection], '3'))
+        {
             servisMotor("bengkel.csv");
             cout << "Tekan enter untuk kembali\n";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        } else if (AdaDalamTeks(menuItems[currentSelection], '4')) {
+        }
+        else if (AdaDalamTeks(menuItems[currentSelection], '4'))
+        {
             tabelAntrean("bengkel.csv");
+
+            string input;
             int hapus;
-            cout << "Masukkan motor yang ingin dihapus: ";
-            cin >> hapus;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            hapusDataMotor("bengkel.csv", hapus - 1);
+            while (true)
+            {
+                cout << "Masukkan nomor data yang akan dihapus: ";
+                getline(cin, input);
+                // cek kosong
+                if (input.empty())
+                {
+                    cout << "Input tidak boleh kosong." << endl;
+                }
+                // cek semua karakter harus digit
+                for (char c : input)
+                {
+                    if (!isdigit(c))
+                    {
+                        cout << "Input harus berupa angka." << endl;
+                    }
+                    else
+                    {
+                        // konversi ke int
+                        hapus = stoi(input);
+                        hapusDataMotor("bengkel.csv", hapus - 1);
+                        menu_pegawai();
+                    }
+                }
+            }
+
             cout << "Tekan enter untuk kembali\n";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        } else {
+        }
+        else
+        {
             break;
         }
     }
