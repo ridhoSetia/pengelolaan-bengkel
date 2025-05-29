@@ -71,7 +71,7 @@ const int sortMenuSize = sizeof(sortMenuItems) / sizeof(sortMenuItems[0]);
 // Fungsi utilitas baru untuk menangani error
 void handle_error(const string& pesan, const exception& e) {
     cout << pesan << ": " << e.what() << "\n";
-    cout << "Tekan enter untuk kembali\n";
+    cout << "Tekan enter untuk Melanjutkan\n";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
