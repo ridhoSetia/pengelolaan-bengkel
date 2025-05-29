@@ -80,23 +80,8 @@ void clearTerminal() {
     system("cls");
 }
 #else
-int _getch() {
-    struct termios oldt, newt;
-    int ch;
-    if (tcgetattr(STDIN_FILENO, &oldt) != 0) {
-        throw runtime_error("Failed to get terminal attributes");
-    }
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &newt) != 0) {
-        throw runtime_error("Failed to set terminal attributes");
-    }
-    ch = getchar();
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &oldt) != 0) {
-        throw runtime_error("Failed to restore terminal attributes");
-    }
-    return ch;
-}
+extern int _getch();
+
 void clearTerminal() {
     system("clear");
 }
