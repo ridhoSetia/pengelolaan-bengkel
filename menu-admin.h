@@ -41,11 +41,13 @@ void tampilkan_antrean();
 void tampilkan_laporan();
 void rekrutPegawai();
 void pecatPegawai();
+void updateAkun();
 void daftarPegawai();
 void handleInput(int &currentSelection, const char *menuItems[], int menuSize);
 void displayMenu(const char *menuItems[], int menuSize, int currentSelection);
 void clearTerminal();
 
+// Tampilan Menu
 const char *adminMenuItems[] = {
     "1. Lihat Antrean",
     "2. Lihat Laporan",
@@ -57,7 +59,8 @@ const int adminMenuSize = sizeof(adminMenuItems) / sizeof(adminMenuItems[0]);
 const char *subMenuItems[] = {
     "1. Rekrut Pegawai",
     "2. Pecat Pegawai",
-    "3. Daftar Pegawai",
+    "3. Update Akun",
+    "4. Daftar Pegawai",
     "0. Kembali"
 };
 const int subMenuSize = sizeof(subMenuItems) / sizeof(subMenuItems[0]);
@@ -68,7 +71,14 @@ const char *sortMenuItems[] = {
 };
 const int sortMenuSize = sizeof(sortMenuItems) / sizeof(sortMenuItems[0]);
 
-// Fungsi utilitas baru untuk menangani error
+const char *updateMenuItems[] = {
+    "1. Update Username",
+    "2. Update Password",
+    "0. Kembali"
+};
+const int updateMenuSize = sizeof(updateMenuItems) / sizeof(updateMenuItems[0]);
+
+// Error Handling
 void handle_error(const string& pesan, const exception& e) {
     cout << pesan << ": " << e.what() << "\n";
     cout << "Tekan enter untuk Melanjutkan\n";
@@ -87,7 +97,7 @@ void clearTerminal() {
 }
 #endif
 
-// Fungsi Buat Tampilan Pada Terminal
+// Tambahan untuk tampilan
 void displayMenu(const char *menuItems[], int menuSize, int currentSelection) {
     clearTerminal();
     cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
@@ -137,7 +147,7 @@ void handleInput(int &currentSelection, const char *menuItems[], int menuSize) {
     }
 }
 
-// Fungsi utilitas untuk membaca data CSV
+// CSV
 vector<DataBengkel> baca_data_csv(const string& namaFile) {
     vector<DataBengkel> data;
     try {
@@ -219,7 +229,6 @@ vector<Akun> baca_akun_csv(const string& namaFile) {
     return akunList;
 }
 
-// Fungsi utilitas untuk menulis akun ke CSV
 void tulis_akun_csv(const string& namaFile, const vector<Akun>& akunList) {
     try {
         ofstream outFile(namaFile);
@@ -235,7 +244,7 @@ void tulis_akun_csv(const string& namaFile, const vector<Akun>& akunList) {
     }
 }
 
-// Fungsi utilitas untuk menampilkan tabel
+// Tabel
 void tampilkan_data_csv(const string& namaFile, const string& judul, int lebarLamaServis) {
     vector<DataBengkel> data = baca_data_csv(namaFile);
     if (data.empty()) {
@@ -302,19 +311,24 @@ void menu_admin() {
                                 cout << "Tekan enter untuk kembali\n";
                                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                                 break;
-                            case 2: // Daftar Pegawai
+                            case 2: // Update Akun
+                                updateAkun();
+                                cout << "Tekan enter untuk kembali\n";
+                                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                break;
+                            case 3: // Daftar Pegawai
                                 daftarPegawai();
                                 cout << "Tekan enter untuk kembali\n";
                                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                                 break;
-                            case 3: // Kembali
+                            case 4: // Kembali
                                 break;
                             default:
                                 cout << "Pilihan tidak valid. Silakan coba lagi.\n";
                                 cout << "Tekan enter untuk kembali\n";
                                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                         }
-                    } while (subPilihan != 3);
+                    } while (subPilihan != 4);
                     break;
                 }
                 case 3: // Keluar
@@ -444,6 +458,121 @@ void pecatPegawai() {
         cout << "Pegawai dengan username '" << usernameToDelete << "' berhasil dipecat.\n";
     } catch (const exception& e) {
         handle_error("Error memecat pegawai", e);
+    }
+}
+
+void updateAkun() {
+    try {
+        string keyword;
+        cout << "\nMasukkan kata kunci untuk mencari username pegawai: ";
+        if (!getline(cin, keyword)) {
+            throw runtime_error("Gagal membaca kata kunci.");
+        }
+
+        vector<Akun> akunList = baca_akun_csv("akun.csv");
+        vector<Akun> filteredList;
+        bool hasData = false;
+        for (const auto& akun : akunList) {
+            if (akun.role == "pegawai") {
+                string usernameLower = akun.username;
+                string keywordLower = keyword;
+                transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
+                transform(keywordLower.begin(), keywordLower.end(), keywordLower.begin(), ::tolower);
+                if (keyword.empty() || usernameLower.find(keywordLower) != string::npos) {
+                    filteredList.push_back(akun);
+                    hasData = true;
+                }
+            }
+        }
+
+        if (!hasData) {
+            cout << "Tidak ada pegawai yang cocok dengan kata kunci '" << keyword << "'.\n";
+            return;
+        }
+
+        cout << "\nHasil pencarian:\n";
+        cout << "+----+----------------------+---------------+\n";
+        cout << "| No |      Username        |     Role      |\n";
+        cout << "+----+----------------------+---------------+\n";
+        int rowNumber = 1;
+        for (const auto& a : filteredList) {
+            cout << "| " << setw(3) << left << rowNumber;
+            cout << "| " << setw(21) << left << (a.username.empty() ? "N/A" : a.username);
+            cout << "| " << setw(14) << left << (a.role.empty() ? "N/A" : a.role);
+            cout << "|\n";
+            rowNumber++;
+        }
+        cout << "+----+----------------------+---------------+\n";
+
+        cout << "Masukkan nomor pegawai yang akan diupdate (1-" << filteredList.size() << "): ";
+        string input;
+        if (!getline(cin, input)) {
+            throw runtime_error("Gagal membaca nomor pilihan.");
+        }
+        int choice;
+        try {
+            choice = stoi(input);
+        } catch (const invalid_argument&) {
+            throw runtime_error("Input harus berupa angka.");
+        }
+        if (choice < 1 || choice > static_cast<int>(filteredList.size())) {
+            throw runtime_error("Nomor pilihan tidak valid.");
+        }
+
+        string usernameToUpdate = filteredList[choice - 1].username;
+        cout << "Apakah Anda yakin ingin mengupdate akun dengan username '" << usernameToUpdate << "'? (y/n): ";
+        char confirm;
+        cin >> confirm;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (tolower(confirm) != 'y') {
+            cout << "Pengubahan akun dibatalkan.\n";
+            return;
+        }
+
+        int updateSelection = 0;
+        handleInput(updateSelection, updateMenuItems, updateMenuSize);
+        int updateChoice = updateSelection;
+        clearTerminal();
+
+        if (updateChoice == 0) { // Update Username
+            string newUsername;
+            cout << "Masukkan username baru: ";
+            if (!getline(cin, newUsername) || newUsername.empty() || newUsername.find(',') != string::npos) {
+                throw runtime_error("Username baru tidak boleh kosong atau mengandung koma.");
+            }
+            for (const auto& a : akunList) {
+                if (a.username == newUsername && a.username != usernameToUpdate) {
+                    throw runtime_error("Username baru sudah digunakan. Silakan coba username lain.");
+                }
+            }
+            for (auto& a : akunList) {
+                if (a.username == usernameToUpdate && a.role == "pegawai") {
+                    a.username = newUsername;
+                    break;
+                }
+            }
+            cout << "Username berhasil diupdate menjadi '" << newUsername << "'.\n";
+        } else if (updateChoice == 1) { // Update Password
+            string newPassword;
+            cout << "Masukkan password baru: ";
+            if (!getline(cin, newPassword) || newPassword.empty() || newPassword.find(',') != string::npos) {
+                throw runtime_error("Password baru tidak boleh kosong atau mengandung koma.");
+            }
+            for (auto& a : akunList) {
+                if (a.username == usernameToUpdate && a.role == "pegawai") {
+                    a.password = newPassword;
+                    break;
+                }
+            }
+            cout << "Password berhasil diupdate.\n";
+        } else if (updateChoice == 2) { // Kembali
+            cout << "Pengubahan akun dibatalkan.\n";
+            return;
+        }
+
+        tulis_akun_csv("akun.csv", akunList);
+    } catch (const exception& e) {
+        handle_error("Error mengupdate akun", e);
     }
 }
 
