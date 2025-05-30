@@ -100,6 +100,7 @@ void clearTerminal() {
 // Tambahan untuk tampilan
 void displayMenu(const char *menuItems[], int menuSize, int currentSelection) {
     clearTerminal();
+    cout << "--- Menu Admin ---" << endl;
     cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
     for (int i = 0; i < menuSize; i++) {
         if (i == currentSelection)

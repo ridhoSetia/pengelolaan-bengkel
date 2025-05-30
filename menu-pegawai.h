@@ -67,6 +67,7 @@ string tanggalMasuk() {
 
 void displayMenu() {
     clearScreen();
+    cout << "--- Menu Pegawai ---" << endl;
     cout << "Gunakan panah atas/bawah, tekan Enter untuk pilih:\n\n";
     for (int i = 0; i < menuSize; i++) {
         if (i == currentSelection)
@@ -139,9 +140,9 @@ void tambahMotor(const string &filename) {
         }
 
         PaketServis paket[] = {
-            {1, "Paket servis ringan", 3},
-            {2, "Paket servis lengkap", 10},
-            {3, "Paket servis berat", 6}
+            {1, "Paket servis ringan", 2},
+            {2, "Paket servis lengkap", 5},
+            {3, "Paket servis berat", 8}
         };
 
         DataBengkel motor;
