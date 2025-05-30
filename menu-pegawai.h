@@ -37,8 +37,8 @@ const char *menuItems[] = {
     "4. Hapus Motor",
     "0. Keluar"
 };
-
 const int menuSize = sizeof(menuItems) / sizeof(menuItems[0]);
+
 int currentSelection = 0;
 
 #ifdef _WIN32

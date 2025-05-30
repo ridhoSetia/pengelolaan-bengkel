@@ -186,7 +186,6 @@ int bacaAkunDariCSV(const string& namaFile, Akun daftarAkun[]) {
     }
 }
 
-// Fungsi login
 bool login(Akun daftarAkun[], int jumlahAkun) {
     try {
         int percobaan = 0;

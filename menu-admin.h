@@ -552,6 +552,7 @@ void updateAkun() {
                 }
             }
             cout << "Username berhasil diupdate menjadi '" << newUsername << "'.\n";
+            
         } else if (updateChoice == 1) { // Update Password
             string newPassword;
             cout << "Masukkan password baru: ";
